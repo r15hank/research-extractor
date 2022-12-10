@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "research_extractor.scopus"
+    "research_extractor.scopus",
+    "research_extractor.pubmed",
 ]
 
 MIDDLEWARE = [

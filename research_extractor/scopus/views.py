@@ -8,7 +8,6 @@ from django.apps import apps
 
 json_parser = JSONParser()
 
-
 def create_doc():
     fields = 'eid doi pii pubmed_id title subtype subtypeDescription ' \
                 'creator afid affilname affiliation_city ' \
@@ -19,7 +18,6 @@ def create_doc():
                 'authkeywords citedby_count openaccess freetoread '\
                 'freetoreadLabel fund_acr fund_no fund_sponsor'
     return namedtuple('Document', fields)
-
 
 
 def _join(item, key, sep=";"):
@@ -43,11 +41,12 @@ def get_api_key():
 
 def search(request):
     search_text = request.GET.get('search_text')
+    print(f"Searching text: {search_text}")
 
     api_url = f"https://api.elsevier.com/content/search/scopus?query=all({search_text})&apiKey={get_api_key()}"
     response1 = requests.get(api_url)
 
-    responsearray = response1.json()["search-results"]["entry"];
+    responsearray = response1.json()["search-results"]["entry"]
     docresult = []
     doc = create_doc()
     for item in responsearray:

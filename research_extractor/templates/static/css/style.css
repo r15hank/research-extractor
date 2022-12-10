@@ -1,0 +1,25 @@
+input {
+    min-width: 100%;
+    max-width: 100%;
+}
+.rule-value-container {
+    width: calc(100% - 42%);
+    /*Can use either % value or px */
+    display: inline-block;
+}
+
+/* @media screen and (min-width: 1400px) {
+    .rule-value-container {
+        width: calc(100% - <new % value>);
+    }
+} */
+
+.fa-heart-o {
+    color: red;
+    cursor: pointer;
+}
+
+.fa-heart {
+    color: red;
+    cursor: pointer;
+}

@@ -8,6 +8,8 @@ django = "*"
 requests = "*"
 djangorestframework = "*"
 pybliometrics = "*"
+pymed = "*"
+biopython = "*"
 
 [dev-packages]
 

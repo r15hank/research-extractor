@@ -1,10 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
-import requests
 from pymed import PubMed
 from Bio import Entrez
-import json
 
 json_parser = JSONParser()
 
@@ -51,7 +49,7 @@ def search(request):
                 # for affilInfo in affil:
                 # if affil["Identifier"]=="Affiliation":
                     # allaffils=allaffils+";"+affil["Affiliation"]
-            name=affillist["LastName"]+" "+affillist["ForeName"]+"; "+name
+            name=str(affillist["LastName"])+" "+ str(affillist["ForeName"])+"; "+name
         # print(paper['MedlineCitation']['Article']['AuthorList'])
         record = {
             'title' : paper['MedlineCitation']['Article']['ArticleTitle'],

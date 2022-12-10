@@ -5,6 +5,8 @@ from rest_framework.parsers import JSONParser
 import requests
 from pybliometrics.scopus.utils import deduplicate, get_freetoread, listify
 from django.apps import apps
+from pymed import PubMed
+from Bio import Entrez
 
 json_parser = JSONParser()
 
@@ -34,12 +36,12 @@ def _replace_none(lst, repl=""):
     return [repl if v is None else v for v in lst]
 
 def get_app_config():
-    return apps.get_app_config('scopus')
+    return apps.get_app_config('api_aggregator')
 
 def get_api_key():
     return get_app_config().api_key
 
-def search(request):
+def search_scopus(request):
     search_text = request.GET.get('search_text')
     print(f"Searching text: {search_text}")
 
@@ -123,3 +125,52 @@ def search(request):
             )
     return JsonResponse(response, safe=False)
 
+
+pubmed = PubMed(tool="MyTool", email="amhatre1@binghamton.edu")
+
+def search_query(query):
+    Entrez.email = 'amhatre1@binghamton.edu'
+    handle = Entrez.esearch(db='pubmed',
+                            sort='relevance',
+                            # retmax='1000',
+                            retmode='xml',
+                            term=query)
+    results = Entrez.read(handle) 
+    return results
+
+def fetch_details(id_list):
+    ids = ','.join(id_list)
+    Entrez.email = 'amhatre1@binghamton.edu'
+    handle = Entrez.efetch(db='pubmed',
+                           retmode='xml',
+                           id=ids)
+    results = Entrez.read(handle)
+    return results
+  
+def search_pubmed(request):
+    search_text = request.GET.get('search_text')
+    results = search_query(search_text) #search word = Image Driven 2D Material
+    id_list = results['IdList']  # type: ignore
+    papers = fetch_details(id_list)
+    records=[]
+    for i, paper in enumerate(papers['PubmedArticle']):  # type: ignore
+        allaffils=''
+        name=''
+        date=''
+        for articledate in paper['MedlineCitation']['Article']['ArticleDate']:
+            date=articledate["Year"]+"-"+articledate["Month"]+"-"+articledate["Day"]
+        for affillist in paper['MedlineCitation']['Article']['AuthorList']:
+            for affil in affillist["AffiliationInfo"]:
+                allaffils=affil["Affiliation"]+";"+allaffils
+            name=str(affillist["LastName"])+" "+ str(affillist["ForeName"])+"; "+name
+        record = {
+            'title' : paper['MedlineCitation']['Article']['ArticleTitle'],
+            'article_date' : date,
+            'creator': name,
+            'affiliation_country' : paper['MedlineCitation']['MedlineJournalInfo']['Country'],
+            'publicationName' : paper['MedlineCitation']['Article']['Journal']['Title'],
+            'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
+            'affilname' : allaffils
+        }
+        records.append(record)        
+    return JsonResponse(records, safe=False)

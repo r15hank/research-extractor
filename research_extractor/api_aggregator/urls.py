@@ -14,8 +14,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from research_extractor.scopus import views
+from research_extractor.api_aggregator import views
 
 urlpatterns = [
-    path("search/", views.search)
+    path("scopus/", views.search_scopus),
+    path("pubmed/", views.search_pubmed)
 ]

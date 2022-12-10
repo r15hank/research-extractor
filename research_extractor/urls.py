@@ -21,6 +21,5 @@ from django.views.generic.base import TemplateView
 urlpatterns = [
     path("", TemplateView.as_view(template_name='index.html'), name="home"),
     path("admin/", admin.site.urls),
-    path("scopus/", include("research_extractor.scopus.urls")),
-    path("pubmed/", include("research_extractor.pubmed.urls")),
+    path("search/", include("research_extractor.api_aggregator.urls")),
 ]

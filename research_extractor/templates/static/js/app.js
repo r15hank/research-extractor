@@ -46,7 +46,7 @@ $(document).ready(function () {
         query = $('#query-builder').queryBuilder('getSQL')['sql'];
         query = query.replaceAll('keyword = ', '');
         db = $('#research-db').val();
-        const url = db + "/search?search_text=" + query;
+        const url = "search/" + db + "?search_text=" + query;
         $.get(url, function (data, status) {
             $table.rows.add(data).draw();
             setupLikeButton();

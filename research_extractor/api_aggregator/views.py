@@ -330,7 +330,7 @@ def search_wos(request):
                 if vals.other.contributor_researcher_id_names != '':
                     if vals.other.contributor_researcher_id_names != None:
                         print("vals--------",vals.other.contributor_researcher_id_names)
-                        doc_object['affilname'] = vals.other.contributor_researcher_id_names
+                        doc_object['affiliation_name'] = vals.other.contributor_researcher_id_names
             if vals.other != '':
                 if vals.other.identifier_issn != '':
                     if vals.other.identifier_issn != None:
@@ -340,7 +340,7 @@ def search_wos(request):
                 if vals.source.source_title != '':
                     if vals.source.source_title != None:
                         # print("publication name\nvals-------",vals.source.source_title)
-                        doc_object['publicationName'] = vals.source.source_title[0]
+                        doc_object['publication_name'] = vals.source.source_title[0]
             if vals.source != '':
                 if vals.source.published_biblio_date and vals.source.published_biblio_year != '':
                     if vals.source.published_biblio_date and vals.source.published_biblio_year != None:

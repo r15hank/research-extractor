@@ -18,5 +18,6 @@ from research_extractor.api_aggregator import views
 
 urlpatterns = [
     path("scopus/", views.search_scopus),
-    path("pubmed/", views.search_pubmed)
+    path("pubmed/", views.search_pubmed),
+    path("wos/", views.search_wos),
 ]

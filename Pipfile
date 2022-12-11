@@ -10,6 +10,8 @@ djangorestframework = "*"
 pybliometrics = "*"
 pymed = "*"
 biopython = "*"
+sudo = "*"
+swagger-client = {ref = "main", git = "https://github.com/Clarivate-SAR/woslite_py_client"}
 
 [dev-packages]
 

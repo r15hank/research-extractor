@@ -1,12 +1,21 @@
+from __future__ import print_function
 from django.shortcuts import render
 from django.http import JsonResponse
 from collections import namedtuple
 from rest_framework.parsers import JSONParser
 import requests
+#scopus
 from pybliometrics.scopus.utils import deduplicate, get_freetoread, listify
 from django.apps import apps
+#pubmed
 from pymed import PubMed
 from Bio import Entrez
+#wos
+import time
+import woslite_client
+from woslite_client.rest import ApiException
+from pprint import pprint
+import json
 
 json_parser = JSONParser()
 
@@ -175,4 +184,96 @@ def search_pubmed(request):
             'liked': False
         }
         records.append(record)        
+    return JsonResponse(records, safe=False)
+
+
+# Configure API key authorization: key
+
+def get_api_key():
+    return get_app_config().wos_api_key
+
+configuration = woslite_client.Configuration()
+configuration.api_key['X-ApiKey'] = get_api_key()
+
+def search_wos(request):
+    search_text = request.GET.get('search_text')
+    # create an instance of the API class
+    # search by specific id
+    # integration_api_instance = woslite_client.IntegrationApi(woslite_client.ApiClient(configuration))
+    # unique_id = 'WOS:000270372400005'  # str | Primary item(s) id to be searched, ex: WOS:000270372400005. Cannot be null or an empty string. Multiple values are separated by comma.
+    search_api_instance = woslite_client.SearchApi(woslite_client.ApiClient(configuration))
+    database_id = 'WOS'  # str | Database to search. Must be a valid database ID, one of the following: BCI/BIOABS/BIOSIS/CCC/DCI/DIIDW/MEDLINE/WOK/WOS/ZOOREC. WOK represents all databases.
+    usr_query = f'TS='+search_text  # str | User query for requesting data, The query parser will return errors for invalid queries.
+    count = 5 # int | Number of records returned in the request
+    first_record = 1  # int | Specific record, if any within the result set to return. Cannot be less than 1 and greater than 100000.
+    # not required
+    lang = 'en'  # str | Language of search. This element can take only one value: en for English. If no language is specified, English is passed by default. (optional)
+    sort_field = 'PY+D'  # str | Order by field(s). Field name and order by clause separated by '+', use A for ASC and D for DESC, ex: PY+D. Multiple values are separated by comma. (optional)
+
+    records=[]
+
+    # print(type(records))
+
+    try:
+    # Find record(s) by user query
+        api_response = search_api_instance.root_get(database_id, usr_query, count, first_record, lang=lang,
+                                                                sort_field=sort_field)
+        # for more details look at the models
+        # firstAuthor = api_response.data[0].author.authors[0]
+        # print("Response: ")
+        # pprint(type(api_response.data))
+        # file = json.dumps(api_response.data, indent=4)
+        # with open("api_respone_results.json", "w") as outfile:
+        #     outfile.write(file)
+        # pprint("First author: " + firstAuthor)
+        
+        doc_object = {
+            'title' : 'Not found',
+            'article_date' : 'Not found',
+            'author' : 'Not found',
+            'affiliation_country' : 'Not found',
+            'publicationName' : '',
+            'issn' : 'Not found',
+            'affilname' : 'Not found'
+        }
+
+        for vals in api_response.data:
+            if vals.other != '':
+                if vals.other.contributor_researcher_id_names != '':
+                    if vals.other.contributor_researcher_id_names != None:
+                        print("vals--------",vals.other.contributor_researcher_id_names)
+                        doc_object['affilname'] = vals.other.contributor_researcher_id_names
+            if vals.other != '':
+                if vals.other.identifier_issn != '':
+                    if vals.other.identifier_issn != None:
+                        # print("vals----------",vals.other.identifier_issn)
+                        doc_object['issn'] = vals.other.identifier_issn[0]
+            if vals.source != '':
+                if vals.source.source_title != '':
+                    if vals.source.source_title != None:
+                        # print("publication name\nvals-------",vals.source.source_title)
+                        doc_object['publicationName'] = vals.source.source_title
+            if vals.source != '':
+                if vals.source.published_biblio_date and vals.source.published_biblio_year != '':
+                    if vals.source.published_biblio_date and vals.source.published_biblio_year != None:
+                        # print("vals------",vals.source.published_biblio_date,"\t",vals.source.published_biblio_year)
+                        doc_object['article_date'] = vals.source.published_biblio_date[0]+" "+vals.source.published_biblio_year[0]
+            if vals.author != '':
+                if vals.author.authors != '':
+                    if vals.author.authors != None:
+                        # print("vals------",vals.author.authors)
+                        doc_object['author'] = vals.author.authors
+            if vals.title != '':
+                if vals.title.title != '':
+                    if vals.title.title != None:
+                        doc_object['title'] = vals.title.title
+                        # print("vals----\n",vals.title.title)
+
+            records.append(doc_object)
+            # pprint(type(records))
+
+    except ApiException as e:
+        print("Exception when calling SearchApi->root_get: %s\\n" % e)
+
+
     return JsonResponse(records, safe=False)

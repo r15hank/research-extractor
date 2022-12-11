@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "fe3ac3f367a5ca93f9fc4799544c8a9021584f559c5d504953bb6724599c5d69"
+            "sha256": "baca1b744f3727f2fef646978a6d41833de0f8e280afdb76d6a5f7da8ef6cd83"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -67,7 +67,7 @@
                 "sha256:5a3d016c7c547f69d6f81fb0db9449ce888b418b5b9952cc5e6e66843e9dd845",
                 "sha256:83e9a75d1911279afd89352c68b45348559d1fc0506b054b346651b5e7fee29f"
             ],
-            "markers": "python_full_version >= '3.6.0'",
+            "markers": "python_version >= '3.6'",
             "version": "==2.1.1"
         },
         "django": {
@@ -151,6 +151,14 @@
             "index": "pypi",
             "version": "==0.8.9"
         },
+        "python-dateutil": {
+            "hashes": [
+                "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86",
+                "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "version": "==2.8.2"
+        },
         "pytz": {
             "hashes": [
                 "sha256:222439474e9c98fced559f1709d89e6c9cbf8d79c794ff3eb9f8800064291427",
@@ -233,6 +241,14 @@
             "markers": "python_version >= '2.5' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==3.18.0"
         },
+        "six": {
+            "hashes": [
+                "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
+                "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"
+            ],
+            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "version": "==1.16.0"
+        },
         "sqlparse": {
             "hashes": [
                 "sha256:0323c0ec29cd52bceabc1b4d9d579e311f3e4961b98d174201d5622a23b85e34",
@@ -240,6 +256,17 @@
             ],
             "markers": "python_version >= '3.5'",
             "version": "==0.4.3"
+        },
+        "sudo": {
+            "hashes": [
+                "sha256:65ace059d4173d2d7ffb0f0697ee64faeaef833ae2a1328b3124a39aea00a19c"
+            ],
+            "index": "pypi",
+            "version": "==1.0.0"
+        },
+        "swagger-client": {
+            "git": "https://github.com/Clarivate-SAR/woslite_py_client",
+            "ref": "964efba76dc43a9bf9a565b6ba3594e944130583"
         },
         "tqdm": {
             "hashes": [

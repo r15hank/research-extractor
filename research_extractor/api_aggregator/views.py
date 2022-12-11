@@ -252,7 +252,7 @@ def search_wos(request):
                 if vals.source.source_title != '':
                     if vals.source.source_title != None:
                         # print("publication name\nvals-------",vals.source.source_title)
-                        doc_object['publicationName'] = vals.source.source_title
+                        doc_object['publicationName'] = vals.source.source_title[0]
             if vals.source != '':
                 if vals.source.published_biblio_date and vals.source.published_biblio_year != '':
                     if vals.source.published_biblio_date and vals.source.published_biblio_year != None:

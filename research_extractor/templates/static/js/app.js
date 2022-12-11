@@ -86,8 +86,9 @@ $(document).ready(function () {
     }
 
     function setupAdditionalFormControls() {
-        $('#query-builder_group_0 .rules-group-header .pull-right').append('<button id="search" class="btn btn-xs btn-primary"><span class="glyphicon glyphicon-search"></span> Search</button>');
-        $('#query-builder_group_0 .rules-group-header').append('<select id="research-db" class="form-select"></select>');
+        var search_button_tag = '<button id="search" class="btn btn-md btn-primary pull-right"><span class="glyphicon glyphicon-search"></span> Search</button>'
+        var research_db_dropdown_tag = '<label class="form-select" for="research-db">Research DB </label><select id="research-db" class="form-select"></select>'
+        $('#query-builder_group_0').append('<div class="search-container">' + research_db_dropdown_tag + search_button_tag + '</div>');
         var $select = $('#research-db')
 
         var research_databases = [

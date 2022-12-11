@@ -12,6 +12,8 @@ pymed = "*"
 biopython = "*"
 sudo = "*"
 swagger-client = {ref = "main", git = "https://github.com/Clarivate-SAR/woslite_py_client"}
+djongo = "*"
+pymongo = "==3.12.1"
 
 [dev-packages]
 

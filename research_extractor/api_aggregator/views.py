@@ -264,11 +264,11 @@ def search_pubmed(request):
         record = {
             'title' : paper['MedlineCitation']['Article']['ArticleTitle'],
             'article_date' : date,
-            'creator': name,
+            'author': name,
             'affiliation_country' : paper['MedlineCitation']['MedlineJournalInfo']['Country'],
-            'publicationName' : paper['MedlineCitation']['Article']['Journal']['Title'],
+            'publication_name' : paper['MedlineCitation']['Article']['Journal']['Title'],
             'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
-            'affilname' : allaffils,
+            'affiliation_name' : allaffils,
             'liked': False
         }
         records.append(record)        
@@ -292,7 +292,7 @@ def search_wos(request):
     search_api_instance = woslite_client.SearchApi(woslite_client.ApiClient(configuration))
     database_id = 'WOS'  # str | Database to search. Must be a valid database ID, one of the following: BCI/BIOABS/BIOSIS/CCC/DCI/DIIDW/MEDLINE/WOK/WOS/ZOOREC. WOK represents all databases.
     usr_query = f'TS='+search_text  # str | User query for requesting data, The query parser will return errors for invalid queries.
-    count = 5 # int | Number of records returned in the request
+    count = 50 # int | Number of records returned in the request
     first_record = 1  # int | Specific record, if any within the result set to return. Cannot be less than 1 and greater than 100000.
     # not required
     lang = 'en'  # str | Language of search. This element can take only one value: en for English. If no language is specified, English is passed by default. (optional)
@@ -320,9 +320,9 @@ def search_wos(request):
             'article_date' : 'Not found',
             'author' : 'Not found',
             'affiliation_country' : 'Not found',
-            'publicationName' : '',
+            'publication_name' : '',
             'issn' : 'Not found',
-            'affilname' : 'Not found'
+            'affiliation_name' : 'Not found'
         }
 
         for vals in api_response.data:

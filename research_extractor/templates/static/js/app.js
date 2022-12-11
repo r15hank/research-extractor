@@ -3,16 +3,25 @@ $(document).ready(function () {
     setupQueryBuilder();
     setupAdditionalFormControls();
 
-    var $table = $('#table_id').DataTable({
-        "columns": [
+    var table = $('#table_id').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'excel', 'pdfHtml5', 'print', 'colvis'],
+        columns: [
             {
-                'data': null,
-                title: 'Action',
+                data: "liked",
+                title: 'Like',
                 wrap: true,
-                // render: function () {
-                //     return '<div class="btn-group"><span id = heart><i class="fa fa-heart-o" aria-hidden="true" ></i></span></div>'
-                // } 
-                "render": function (data, type, row) { return '<button class="button button-like"><i class="fa fa-heart"></i><span>Like</span></button>' }
+                render: function (data, type, row) {
+                    console.log(data, type);
+                    if (type == 'display') {
+                        if (data == true)
+                            return '<button class="button button-like liked" value="' + data + '" data-><i class="fa fa-heart"></i><span>Liked</span></button>';
+                        else
+                            return '<button class="button button-like" value="' + data + '" data-><i class="fa fa-heart"></i><span>Like</span></button>';
+                    }
+                    return data;
+                }
             },
             {
                 data: "title",
@@ -42,19 +51,20 @@ $(document).ready(function () {
     });
 
     $('#search').on('click', function () {
+        table.clear().draw();
         // console.log(JSON.stringify($('#query-builder').queryBuilder('getSQL'), undefined, 4));
         query = $('#query-builder').queryBuilder('getSQL')['sql'];
         query = query.replaceAll('keyword = ', '');
         db = $('#research-db').val();
         const url = "search/" + db + "?search_text=" + query;
+        $('#lmask').show();
         $.get(url, function (data, status) {
-            $table.rows.add(data).draw();
-            setupLikeButton();
-            console.log("Data: " + data + "\nStatus: " + status);
+            table.rows.add(data).draw();
+            $('#lmask').hide();
         });
     });
 
-
+    $('#lmask').hide();
 
     function setupQueryBuilder() {
         var options = {
@@ -93,13 +103,18 @@ $(document).ready(function () {
             tag = '<option value="' + research_db['db_name'] + '">' + research_db['db_desc'] + '</option>';
             $select.append(tag);
         }
-    }
+    };
 
-    function setupLikeButton() {
-        $('.button-like').on('click', function () {
-            $(this).toggleClass("liked");
-        });
-    }
+    $('#table_id tbody').on('click', 'button', function () {
+        isLiked = toggleLikeButton($(this));
+        table.cell(this.closest('td')).data(isLiked);
+    });
 
+    function toggleLikeButton(button) {
+        isLiked = !(button.val() === 'true')
+        $(button).val(isLiked);
+        return isLiked;
+    }
 });
+
 

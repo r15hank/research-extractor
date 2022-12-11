@@ -120,7 +120,8 @@ def search_scopus(request):
                     "affiliation_country": item.affiliation_country,
                     "publicationName": item.publicationName,
                     "issn": item.issn,
-                    "affilname": item.affilname
+                    "affilname": item.affilname,
+                    "liked": False
                 }
             )
     return JsonResponse(response, safe=False)
@@ -170,7 +171,8 @@ def search_pubmed(request):
             'affiliation_country' : paper['MedlineCitation']['MedlineJournalInfo']['Country'],
             'publicationName' : paper['MedlineCitation']['Article']['Journal']['Title'],
             'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
-            'affilname' : allaffils
+            'affilname' : allaffils,
+            'liked': False
         }
         records.append(record)        
     return JsonResponse(records, safe=False)

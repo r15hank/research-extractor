@@ -48,19 +48,23 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <div class="jumbotron">
+            <div class="jumbotron banner">
                 <h3 class="display-4"><span class="glyphicon glyphicon-globe"></span> Research Search Extractor</h3>
                 <hr><i class="fa-solid fa-house"></i>
-
+            
                 <p class="lead">Simple tool for querying research databases and curating results for the research community.</p>
             </div>
-        </div>
-        <div class="row">
-            <div id="searcharea" class="col-lg-5 col-md-5 col-xs-12">
+            <div id="searcharea" class="col-xs-12">
+                <h2>Query builder</h2>
                 <div id="query-builder" class="col-xs-"></div>
             </div>
-            <div id="displayarea" class="col-lg-6 col-md-6 col-xs-12">
+            <div id="displayarea" class="col-xs-12">
                 <div class="row">
+                    <div id="result-query">
+                        <h2>Results</h2>
+                        <pre id="query-text">Query:</pre>
+                    </div>
+                    
                     <table id="table_id" class="display" style="border: 1px black;">
                     </table>
 

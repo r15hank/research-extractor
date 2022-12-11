@@ -60,6 +60,7 @@ $(document).ready(function () {
         query = $('#query-builder').queryBuilder('getSQL')['sql'];
         query = query.replaceAll('keyword = ', '');
         db = $('#research-db').val();
+        $('#query-text').html("Datasource: " + db + ", Query:" + query);
         const url = "search/" + db + "?search_text=" + query;
         $('#lmask').show();
         $.get(url, function (data, status) {

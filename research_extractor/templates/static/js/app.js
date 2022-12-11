@@ -28,15 +28,15 @@ $(document).ready(function () {
                 title: "Title"
             },
             {
-                data: "creator",
-                title: "Creator"
+                data: "author",
+                title: "author"
             },
             {
                 data: "affiliation_country",
                 title: "Affiliation Country"
             },
             {
-                data: "publicationName",
+                data: "publication_name",
                 title: "Publication Name"
             },
             {
@@ -44,8 +44,12 @@ $(document).ready(function () {
                 title: "ISSN"
             },
             {
-                data: "affilname",
+                data: "affiliation_name",
                 title: "Affiliation Name"
+            },
+            {
+                data: "url",
+                title: "Link"
             }
         ]
     });

@@ -16,13 +16,17 @@ import woslite_client
 from woslite_client.rest import ApiException
 from pprint import pprint
 import json
+from .models import SearchResults #PapersArchive, SearchArchive, FavoritesArchive
+from .serializers import Search_ResultsSerializer #SearchArchiveSerializer
+import json
+import ast
 
 json_parser = JSONParser()
 
 def create_doc():
     fields = 'eid doi pii pubmed_id title subtype subtypeDescription ' \
                 'creator afid affilname affiliation_city ' \
-                'affiliation_country author_count author_names author_ids '\
+                'affiliation_country author_count author_names author_ids url '\
                 'author_afids coverDate coverDisplayDate publicationName '\
                 'issn source_id eIssn aggregationType volume '\
                 'issueIdentifier article_number pageRange description '\
@@ -39,7 +43,15 @@ def _join(item, key, sep=";"):
         return sep.join([d[key] or "" for d in item["affiliation"]])
     except (KeyError, TypeError):
         return None
+    
+def _joinurlTo(item, key, sep=";"):
+    try:
+        for d in item["link"]:
+            if d["@ref"]=="scopus":
+                return d["@href"]
 
+    except (KeyError, TypeError):
+        return None
 
 def _replace_none(lst, repl=""):
     return [repl if v is None else v for v in lst]
@@ -53,11 +65,33 @@ def get_api_key():
 def search_scopus(request):
     search_text = request.GET.get('search_text')
     print(f"Searching text: {search_text}")
+    
+    #checking if search alredy present
+    searchid = SearchResults.objects.filter(search_name=search_text)
+    searchlist = Search_ResultsSerializer(searchid, many=True)
 
+    prevSearch=""
+    prevId=""
+    prevresults=[]
+    # print("searchlist.data     :",searchlist.data)
+    if len(searchlist.data)>0:
+        for val in searchlist.data:
+            # print("seearchname----",val["search_name"])
+            prevSearch=val["search_name"]
+            prevId=val["search_id"]
+            if(len(prevresults)==0):
+                prevresults=val["results"]
+            else:
+                prevresults.extend(val["results"])
+
+    # print("major length------",prevresults)
+
+    #Uncomment start
     api_url = f"https://api.elsevier.com/content/search/scopus?query=all({search_text})&apiKey={get_api_key()}"
     response1 = requests.get(api_url)
 
     responsearray = response1.json()["search-results"]["entry"]
+
     docresult = []
     doc = create_doc()
     for item in responsearray:
@@ -67,6 +101,7 @@ def search_scopus(request):
         info["afid"] = _join(item, 'afid')
         info["aff_city"] = _join(item, 'affiliation-city')
         info["aff_country"] = _join(item, 'affiliation-country')
+        info["url"] = _joinurlTo(item,'link')
         # Parse authors
         try:
             # Deduplicate list of authors
@@ -118,22 +153,75 @@ def search_scopus(request):
                     affiliation_city=info.get("aff_city"), afid=info.get("afid"),
                     description=item.get('dc:description'), pii=item.get('pii'),
                     authkeywords=item.get('authkeywords'), eid=item.get('eid'),
-                    fund_acr=item.get('fund-acr'), pubmed_id=item.get('pubmed-id'))
+                    fund_acr=item.get('fund-acr'), pubmed_id=item.get('pubmed-id'),
+                    url=info["url"])
         docresult.append(new)
-        response = []
-        for item in docresult:
-            response.append(
-                {
-                    "title": item.title,
-                    "creator": item.creator,
-                    "affiliation_country": item.affiliation_country,
-                    "publicationName": item.publicationName,
-                    "issn": item.issn,
-                    "affilname": item.affilname,
-                    "liked": False
-                }
-            )
-    return JsonResponse(response, safe=False)
+        
+    response = []
+    for item in docresult:
+        docobj={
+                "title": item.title,
+                "author":"dummyr",
+                "affiliation_country": item.affiliation_country,
+                "affiliation_name": item.affilname,
+                # "affiliation_country": item.affiliation_country,
+                "publication_name": item.publicationName,
+                "issn": item.issn,
+                "affiliation_name": item.affilname,
+                "url": item.url,
+                "abstract": '',
+                "liked": False
+            }
+
+        response.append(
+            docobj
+        )
+
+    response.extend(prevresults)
+
+    seen = []
+    print("prev length",len(response))
+    new_list=[]
+    for data in response:
+        if data["title"] not in seen:
+            seen.append(data["title"])
+            new_list.append(data)
+            
+    print("new length",len(new_list))
+
+    # print(len(response))
+    searchobj={}
+    if prevSearch == "":
+        searchobj={
+            # "search_id": models.AutoField(primary_key=True)
+            "search_name": search_text,
+            # search_date = models.DateField(d)
+            "research_db": "Scopus",
+            "results": new_list
+        }
+        saveSearch= SearchResults()
+        saveSearch.search_name=searchobj['search_name']
+        saveSearch.research_db=searchobj["research_db"]
+        saveSearch.results=searchobj['results']
+        saveSearch.save()
+
+    else:
+        searchobj={
+            # "search_id": models.AutoField(primary_key=True)
+            "search_name": prevSearch,
+            # search_date = models.DateField(d)
+            "research_db": "Scopus",
+            "results": new_list
+        }
+        # searchid = SearchResults.objects.filter(search_name=search_text)
+        # searchlist = Search_ResultsSerializer(searchid, many=True)
+        
+        oldSR = SearchResults.objects.get(search_id=prevId)
+        oldSR.results = searchobj['results']
+        oldSR.save() 
+
+    print("returning-----:", searchobj["results"])
+    return JsonResponse( searchobj["results"], safe=False)
 
 
 pubmed = PubMed(tool="MyTool", email="amhatre1@binghamton.edu")

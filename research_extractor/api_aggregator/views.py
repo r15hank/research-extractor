@@ -269,6 +269,7 @@ def search_pubmed(request):
             'publication_name' : paper['MedlineCitation']['Article']['Journal']['Title'],
             'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
             'affiliation_name' : allaffils,
+            'url': f"https://pubmed.ncbi.nlm.nih.gov/{paper['MedlineCitation']['PMID']}/",
             'liked': False
         }
         records.append(record)        
@@ -356,7 +357,8 @@ def search_wos(request):
                     if vals.title.title != None:
                         doc_object['title'] = vals.title.title
                         # print("vals----\n",vals.title.title)
-
+            if vals.ut != '':
+                doc_object['url'] = f"https://www.webofscience.com/wos/woscc/full-record/{vals.ut}"
             records.append(doc_object)
             # pprint(type(records))
 

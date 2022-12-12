@@ -49,7 +49,14 @@ $(document).ready(function () {
             },
             {
                 data: "url",
-                title: "Link"
+                title: "Link",
+                render: function (data, type, row) {
+                    console.log(data, type);
+                    if (type == 'display') {
+                        return '<a target="_blank" href="' + data + '"><i class="fa fa-external-link" aria-hidden="true"></i> Link</a>';
+                    }
+                    return data;
+                }
             }
         ]
     });

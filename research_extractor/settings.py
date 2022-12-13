@@ -75,13 +75,6 @@ WSGI_APPLICATION = "research_extractor.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 DATABASES = {
        'default': {
            'ENGINE': 'djongo',
@@ -127,3 +120,10 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Defined API keys of research DBs
+from decouple import config
+
+SCOPUS_API_KEY = config('SCOPUS_API_KEY')
+PUBMED_API_KEY = config('PUBMED_API_KEY')
+WOS_API_KEY = config('WOS_API_KEY')

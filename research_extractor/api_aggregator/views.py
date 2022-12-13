@@ -21,6 +21,8 @@ from .serializers import Search_ResultsSerializer #SearchArchiveSerializer
 import json
 import ast
 
+from django.conf import settings
+
 json_parser = JSONParser()
 
 def create_doc():
@@ -56,11 +58,6 @@ def _joinurlTo(item, key, sep=";"):
 def _replace_none(lst, repl=""):
     return [repl if v is None else v for v in lst]
 
-def get_app_config():
-    return apps.get_app_config('api_aggregator')
-
-def get_api_key():
-    return get_app_config().api_key
 
 def search_scopus(request):
     search_text = request.GET.get('search_text')
@@ -87,7 +84,7 @@ def search_scopus(request):
     # print("major length------",prevresults)
 
     #Uncomment start
-    api_url = f"https://api.elsevier.com/content/search/scopus?query=all({search_text})&apiKey={get_api_key()}"
+    api_url = f"https://api.elsevier.com/content/search/scopus?query=all({search_text})&apiKey={settings.SCOPUS_API_KEY}"
     response1 = requests.get(api_url)
 
     responsearray = response1.json()["search-results"]["entry"]
@@ -224,10 +221,10 @@ def search_scopus(request):
     return JsonResponse( searchobj["results"], safe=False)
 
 
-pubmed = PubMed(tool="MyTool", email="amhatre1@binghamton.edu")
+pubmed = PubMed(tool="MyTool", email=settings.PUBMED_API_KEY)
 
 def search_query(query):
-    Entrez.email = 'amhatre1@binghamton.edu'
+    Entrez.email = pubmed.email
     handle = Entrez.esearch(db='pubmed',
                             sort='relevance',
                             # retmax='1000',
@@ -238,7 +235,7 @@ def search_query(query):
 
 def fetch_details(id_list):
     ids = ','.join(id_list)
-    Entrez.email = 'amhatre1@binghamton.edu'
+    Entrez.email = pubmed.email
     handle = Entrez.efetch(db='pubmed',
                            retmode='xml',
                            id=ids)
@@ -277,12 +274,8 @@ def search_pubmed(request):
 
 
 # Configure API key authorization: key
-
-def get_api_key():
-    return get_app_config().wos_api_key
-
 configuration = woslite_client.Configuration()
-configuration.api_key['X-ApiKey'] = get_api_key()
+configuration.api_key['X-ApiKey'] = settings.WOS_API_KEY
 
 def search_wos(request):
     search_text = request.GET.get('search_text')
@@ -323,7 +316,8 @@ def search_wos(request):
             'affiliation_country' : 'Not found',
             'publication_name' : '',
             'issn' : 'Not found',
-            'affiliation_name' : 'Not found'
+            'affiliation_name' : 'Not found',
+            'liked': False
         }
 
         for vals in api_response.data:

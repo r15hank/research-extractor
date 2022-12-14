@@ -2,6 +2,7 @@ from __future__ import print_function
 from django.shortcuts import render
 from django.http import JsonResponse
 from collections import namedtuple
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 import requests
 #scopus
@@ -361,3 +362,17 @@ def search_wos(request):
 
 
     return JsonResponse(records, safe=False)
+
+
+@csrf_exempt
+def update_search_results(request):
+    if request.method == 'PUT':
+        request_json = json_parser.parse(request)
+        # checking if search alredy present
+        query_set = SearchResults.objects.get(search_id=2)
+        search_result = Search_ResultsSerializer(query_set, data=request_json)
+        if search_result.is_valid():
+            search_result.save()
+            return JsonResponse(search_result.data, safe=False)
+        else:
+            return JsonResponse(search_result.errors, status=500, safe=False)

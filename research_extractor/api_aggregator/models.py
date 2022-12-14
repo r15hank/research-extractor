@@ -28,14 +28,14 @@ from djongo import models
 
 
 class Results(models.Model):
-    title = models.CharField(primary_key=True,max_length=1000)
+    title = models.CharField(primary_key=True, max_length=1000)
     author = models.CharField(max_length=100)
-    publication_name = models.CharField(max_length=1000)
-    issn = models.CharField(max_length=1000)
-    affiliation_name = models.CharField(max_length=2000)
-    affiliation_country = models.CharField(max_length=100)
+    publication_name = models.CharField(max_length=1000, blank=True, null=True)
+    issn = models.CharField(max_length=1000, blank=True, null=True)
+    affiliation_name = models.CharField(max_length=2000, blank=True, null=True)
+    affiliation_country = models.CharField(max_length=100, blank=True, null=True)
+    abstract = models.CharField(max_length=10000, blank=True, null=True)
     url = models.CharField(max_length=1000)
-    abstract = models.CharField(max_length=10000)
     liked = models.BooleanField(default=False)
     class Meta:
         managed = False

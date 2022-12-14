@@ -20,4 +20,5 @@ urlpatterns = [
     path("scopus/", views.search_scopus),
     path("pubmed/", views.search_pubmed),
     path("wos/", views.search_wos),
+    path("update_result/", views.update_search_results),
 ]

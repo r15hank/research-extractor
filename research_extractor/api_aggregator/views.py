@@ -276,6 +276,7 @@ def search_pubmed(request):
 
 # Configure API key authorization: key
 configuration = woslite_client.Configuration()
+search_api_instance = woslite_client.SearchApi(woslite_client.ApiClient(configuration))
 configuration.api_key['X-ApiKey'] = settings.WOS_API_KEY
 
 def search_wos(request):
@@ -284,33 +285,27 @@ def search_wos(request):
     # search by specific id
     # integration_api_instance = woslite_client.IntegrationApi(woslite_client.ApiClient(configuration))
     # unique_id = 'WOS:000270372400005'  # str | Primary item(s) id to be searched, ex: WOS:000270372400005. Cannot be null or an empty string. Multiple values are separated by comma.
-    search_api_instance = woslite_client.SearchApi(woslite_client.ApiClient(configuration))
+    
     database_id = 'WOS'  # str | Database to search. Must be a valid database ID, one of the following: BCI/BIOABS/BIOSIS/CCC/DCI/DIIDW/MEDLINE/WOK/WOS/ZOOREC. WOK represents all databases.
     usr_query = f'TS='+search_text  # str | User query for requesting data, The query parser will return errors for invalid queries.
-    count = 50 # int | Number of records returned in the request
+    count = 100 # int | Number of records returned in the request
     first_record = 1  # int | Specific record, if any within the result set to return. Cannot be less than 1 and greater than 100000.
     # not required
     lang = 'en'  # str | Language of search. This element can take only one value: en for English. If no language is specified, English is passed by default. (optional)
     sort_field = 'PY+D'  # str | Order by field(s). Field name and order by clause separated by '+', use A for ASC and D for DESC, ex: PY+D. Multiple values are separated by comma. (optional)
-
-    records=[]
+    
+    records_wos=[]
 
     # print(type(records))
 
     try:
     # Find record(s) by user query
-        api_response = search_api_instance.root_get(database_id, usr_query, count, first_record, lang=lang,
-                                                                sort_field=sort_field)
+        api_response = search_api_instance.root_get(database_id, usr_query, count, first_record)
         # for more details look at the models
-        # firstAuthor = api_response.data[0].author.authors[0]
-        # print("Response: ")
-        # pprint(type(api_response.data))
-        # file = json.dumps(api_response.data, indent=4)
-        # with open("api_respone_results.json", "w") as outfile:
-        #     outfile.write(file)
-        # pprint("First author: " + firstAuthor)
-        
-        doc_object = {
+
+        for vals in api_response.data:
+
+            doc_object = {
             'title' : 'Not found',
             'article_date' : 'Not found',
             'author' : 'Not found',
@@ -321,11 +316,10 @@ def search_wos(request):
             'liked': False
         }
 
-        for vals in api_response.data:
             if vals.other != '':
                 if vals.other.contributor_researcher_id_names != '':
                     if vals.other.contributor_researcher_id_names != None:
-                        print("vals--------",vals.other.contributor_researcher_id_names)
+                        # print("vals--------",vals.other.contributor_researcher_id_names)
                         doc_object['affiliation_name'] = vals.other.contributor_researcher_id_names
             if vals.other != '':
                 if vals.other.identifier_issn != '':
@@ -351,16 +345,32 @@ def search_wos(request):
                 if vals.title.title != '':
                     if vals.title.title != None:
                         doc_object['title'] = vals.title.title
-                        # print("vals----\n",vals.title.title)
+                        # print("Titlevals----\n",vals.title.title)
             if vals.ut != '':
                 doc_object['url'] = f"https://www.webofscience.com/wos/woscc/full-record/{vals.ut}"
-            records.append(doc_object)
-            # pprint(type(records))
-
+            # pprint(doc_object)
+            records_wos.append(doc_object)
+        # pprint(type(records_wos))
+        # pprint(records_wos)
     except ApiException as e:
         print("Exception when calling SearchApi->root_get: %s\\n" % e)
 
+    return JsonResponse(records_wos, safe=False)
 
+
+# def search_ieee(request):
+#     api_key = '99c97axrqm3gp6ysncpbtnja'
+#     search_text = request.GET.get('search_text')
+#     fetch_text = request.GET.get(f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&apikey={api_key}')
+    
+#     # ieee_api = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&apikey={api_key}'
+
+#     import xplore
+#     query = xplore.xploreapi.XPLORE('api_access_key')
+#     query.abstractText('query')
+#     data = query.callAPI()  
+
+<<<<<<< Updated upstream
     return JsonResponse(records, safe=False)
 
 
@@ -376,3 +386,6 @@ def update_search_results(request):
             return JsonResponse(search_result.data, safe=False)
         else:
             return JsonResponse(search_result.errors, status=500, safe=False)
+=======
+#     return JsonResponse(fetch_text, safe=False)
+>>>>>>> Stashed changes

@@ -20,5 +20,9 @@ urlpatterns = [
     path("scopus/", views.search_scopus),
     path("pubmed/", views.search_pubmed),
     path("wos/", views.search_wos),
+<<<<<<< Updated upstream
     path("update_result/", views.update_search_results),
+=======
+    # path("ieee/",views.search_ieee),
+>>>>>>> Stashed changes
 ]

@@ -227,8 +227,8 @@ pubmed = PubMed(tool="MyTool", email=settings.PUBMED_API_KEY)
 def search_query(query):
     Entrez.email = pubmed.email
     handle = Entrez.esearch(db='pubmed',
-                            sort='relevance',
-                            # retmax='1000',
+                            sort='most+recent',
+                            retmax='1000',
                             retmode='xml',
                             term=query)
     results = Entrez.read(handle) 

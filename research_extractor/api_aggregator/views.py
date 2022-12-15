@@ -370,8 +370,7 @@ def search_wos(request):
 #     query.abstractText('query')
 #     data = query.callAPI()  
 
-<<<<<<< Updated upstream
-    return JsonResponse(records, safe=False)
+    # return JsonResponse(records, safe=False)
 
 
 @csrf_exempt
@@ -386,6 +385,4 @@ def update_search_results(request):
             return JsonResponse(search_result.data, safe=False)
         else:
             return JsonResponse(search_result.errors, status=500, safe=False)
-=======
 #     return JsonResponse(fetch_text, safe=False)
->>>>>>> Stashed changes

@@ -59,6 +59,7 @@
             </div>
             <div id="searcharea" class="col-xs-12">
                 <span class="pull-right">
+                    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal"> <i class="fa-solid fa-clock-rotate-left"></i> History</button>
                     <label id="force-search-label" class="toggle">
                         <input id="force-search" type="checkbox">
                         <span class="slider"></span>
@@ -82,13 +83,33 @@
                 </div>
             </div>
         </div>
-
-
-
     </div>
     <div id="lmask" class="lmask"></div>
+    <!-- Modal -->
+    
+    <div class="modal fade" id="myModal" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"><i class="fa-solid fa-clock-rotate-left"></i> History</h4>
+                </div>
+                <div class="modal-body">
+                    Queries
+                    <select name="select" id="query-history">
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="search-history" class="btn btn-primary" data-dismiss="modal">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
 
+    
     </script>
 </body>
 

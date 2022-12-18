@@ -78,25 +78,30 @@ $(document).ready(function () {
         query = $('#query-builder').queryBuilder('getSQL')['sql'];
         query = query.replaceAll('keyword = ', '');
         db = $('#research-db').val();
-        $('#query-response').html("Datasource: " + db + ", Query: " + query);
+        force_search = document.getElementById("force-search").checked;
+        search_db(db, query, force_search);
+    });
+
+    function search_db(db, query, force_search) {
+        $('#query-response').html(createQueryText(db, query));
         $.ajax({
             url: "search/research_db/" + db,
             type: 'get',
             beforeSend: () => showLoadingScreen(true),
             data: {
                 search_text: query,
-                force_search: document.getElementById("force-search").checked
+                force_search: force_search
             },
-            success: function(data) {
+            success: function (data) {
                 table.rows.add(data.results).draw();
                 showLoadingScreen(false);
             },
-            error: function(error) {
+            error: function (error) {
                 alert("Request failed: " + error);
                 showLoadingScreen(false);
             }
         });
-    });
+    }
 
     $('#lmask').hide();
 
@@ -122,7 +127,6 @@ $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip();   
 
         $('#query-builder_group_0').append('<div class="search-container">' + research_db_dropdown_tag + search_button_tag + '</div>');
-        var $select = $('#research-db')
 
         var research_databases = [
             {
@@ -138,11 +142,41 @@ $(document).ready(function () {
                 'db_desc': 'Web of Science'
             }
         ];
-        for (const research_db of research_databases) {
-            tag = '<option value="' + research_db['db_name'] + '">' + research_db['db_desc'] + '</option>';
-            $select.append(tag);
-        }
+        addOptionTags($('#research-db'), research_databases, 'db_name', 'db_desc')
     };
+
+    function addOptionTags(select, options, value_key, label_key) {
+        for (const option of options) {
+            select.append(createOptionTag(option, value_key, label_key));
+        }
+    }
+
+    function createOptionTag(option, value_key, label_key) {
+        return '<option value="' + option[value_key] + '">' + option[label_key] + '</option>';
+    }
+
+    $("#myModal").on("show.bs.modal", function (e) {
+        $.ajax({
+            url: "search/queries/",
+            type: 'get',
+            success: function (results) {
+                options = [];
+                for (result of results) {
+                    text = createQueryText(result['research_db'], result['search_name']);
+                    options.push({ 'text': text });
+                }
+                addOptionTags($('#query-history'), options, 'text', 'text');
+            },
+            error: function (error) {
+                alert("Request failed: " + error.error);
+            }
+        });
+    });
+
+    $('#search-history').on('click', function () {
+        query_details = getQueryDetails($('#query-history').val());
+        search_db(query_details['research_db'], query_details['search_name'], false);
+    });
 
     $('#table_id tbody').on('click', 'button', function () {
         isLiked = toggleLikeButton($(this));
@@ -173,7 +207,7 @@ $(document).ready(function () {
     }
 
     function updateSearchResults(data) {
-        var queryDetails = getQueryDetails();
+        var queryDetails = getQueryDetails($('#query-response').html());
         request = {
             search_name: queryDetails['search_name'],
             research_db: queryDetails['research_db'],
@@ -196,9 +230,9 @@ $(document).ready(function () {
         });
     }
 
-    function getQueryDetails() {
+    function getQueryDetails(text) {
         let queryDetails = {};
-        let queryContent = $('#query-response').html().split(', ');
+        let queryContent = text.split(', ');
         queryDetails['research_db'] = queryContent[0].split(': ')[1];
         queryDetails['search_name'] = queryContent[1].split(': ')[1];
         return queryDetails;
@@ -210,6 +244,10 @@ $(document).ready(function () {
         } else {
             $('#lmask').hide();
         }
+    }
+
+    function createQueryText(db, query) {
+        return "Datasource: " + db + ", Query: " + query;
     }
 });
 

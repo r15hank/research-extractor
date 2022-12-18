@@ -583,4 +583,14 @@ def update_search_results(request):
             return JsonResponse(search_result.data, safe=False)
         else:
             return JsonResponse(search_result.errors, status=500, safe=False)
-#     return JsonResponse(fetch_text, safe=False)
+
+
+def get_queries(request):
+    queries = []
+    query_set = SearchResults.objects.values_list('research_db', 'search_name').distinct()
+    for query in query_set:
+        queries.append({
+            'research_db': query[0],
+            'search_name': query[1]
+        })
+    return JsonResponse(queries, safe=False)

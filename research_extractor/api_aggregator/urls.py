@@ -19,5 +19,6 @@ from research_extractor.api_aggregator import views
 urlpatterns = [
     path("research_db/<str:research_db>", views.search),
     path("update_result/", views.update_search_results),
+    path('queries/', views.get_queries),
     path("ieee/",views.search_ieee),
 ]

@@ -203,8 +203,11 @@ $(document).ready(function () {
     });
 
     $('#search-history').on('click', function () {
-        query_details = historyTable.rows('.selected').data()[0]
-        search_db(query_details['research_db'], query_details['search_name'], false);
+        query_details = historyTable.rows('.selected').data()[0];
+        if (query_details == undefined)
+            alert('Please select a row to load search results!');
+        else
+            search_db(query_details['research_db'], query_details['search_name'], false);
     });
 
     $('#results-table tbody').on('click', 'button', function () {

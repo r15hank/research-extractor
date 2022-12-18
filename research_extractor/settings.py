@@ -127,3 +127,4 @@ from decouple import config
 SCOPUS_API_KEY = config('SCOPUS_API_KEY')
 PUBMED_API_KEY = config('PUBMED_API_KEY')
 WOS_API_KEY = config('WOS_API_KEY')
+# IEEE_API_KEY = config('IEEE_API_KEY')

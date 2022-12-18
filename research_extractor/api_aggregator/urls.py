@@ -21,5 +21,5 @@ urlpatterns = [
     path("pubmed/", views.search_pubmed),
     path("wos/", views.search_wos),
     path("update_result/", views.update_search_results),
-    # path("ieee/",views.search_ieee),
+    path("ieee/",views.search_ieee),
 ]

@@ -21,6 +21,11 @@ from .models import SearchResults #PapersArchive, SearchArchive, FavoritesArchiv
 from .serializers import Search_ResultsSerializer #SearchArchiveSerializer
 import json
 import ast
+#ieee
+import xplore
+from iso3166 import countries
+import pycountry
+
 
 from django.conf import settings
 
@@ -276,23 +281,20 @@ def search_pubmed(request):
 
 # Configure API key authorization: key
 configuration = woslite_client.Configuration()
+# create an instance of the API class
 search_api_instance = woslite_client.SearchApi(woslite_client.ApiClient(configuration))
 configuration.api_key['X-ApiKey'] = settings.WOS_API_KEY
 
 def search_wos(request):
     search_text = request.GET.get('search_text')
-    # create an instance of the API class
-    # search by specific id
-    # integration_api_instance = woslite_client.IntegrationApi(woslite_client.ApiClient(configuration))
-    # unique_id = 'WOS:000270372400005'  # str | Primary item(s) id to be searched, ex: WOS:000270372400005. Cannot be null or an empty string. Multiple values are separated by comma.
     
     database_id = 'WOS'  # str | Database to search. Must be a valid database ID, one of the following: BCI/BIOABS/BIOSIS/CCC/DCI/DIIDW/MEDLINE/WOK/WOS/ZOOREC. WOK represents all databases.
     usr_query = f'TS='+search_text  # str | User query for requesting data, The query parser will return errors for invalid queries.
     count = 100 # int | Number of records returned in the request
     first_record = 1  # int | Specific record, if any within the result set to return. Cannot be less than 1 and greater than 100000.
-    # not required
-    lang = 'en'  # str | Language of search. This element can take only one value: en for English. If no language is specified, English is passed by default. (optional)
-    sort_field = 'PY+D'  # str | Order by field(s). Field name and order by clause separated by '+', use A for ASC and D for DESC, ex: PY+D. Multiple values are separated by comma. (optional)
+    # extra parameters
+    # lang = 'en'  # str | Language of search. This element can take only one value: en for English. If no language is specified, English is passed by default. (optional)
+    # sort_field = 'PY+D'  # str | Order by field(s). Field name and order by clause separated by '+', use A for ASC and D for DESC, ex: PY+D. Multiple values are separated by comma. (optional)
     
     records_wos=[]
 
@@ -358,19 +360,99 @@ def search_wos(request):
     return JsonResponse(records_wos, safe=False)
 
 
-# def search_ieee(request):
-#     api_key = '99c97axrqm3gp6ysncpbtnja'
-#     search_text = request.GET.get('search_text')
-#     fetch_text = request.GET.get(f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&apikey={api_key}')
+def search_ieee(request):
+
+    format='json'
+    api_key = '99c97axrqm3gp6ysncpbtnja'
+    max_records = 5
+    search_text = request.GET.get('search_text')
+    print(f"Searching text: {search_text}")
+    fetch_text = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&format={format}&apikey={api_key}&max_records={max_records}'
+    # fetch_text = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&format={format}&apikey={settings.IEEE_API_KEY}'
+    response1 = requests.get(fetch_text)
+    response = response1.json()
+    response_articles= response["articles"]
+    # pprint(response_articles)
     
-#     # ieee_api = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&apikey={api_key}'
+    records_ieee = []
 
-#     import xplore
-#     query = xplore.xploreapi.XPLORE('api_access_key')
-#     query.abstractText('query')
-#     data = query.callAPI()  
+    for vals in response_articles:
 
-    # return JsonResponse(records, safe=False)
+        doc_object = {
+            'title' : 'Not found',
+            'article_date' : 'Not found',
+            'author' : 'Not found',
+            'affiliation_country' : '',
+            'publication_name' : '',
+            'issn' : 'Not found',
+            'affiliation_name' : 'Not found',
+            'liked': False
+        }
+
+        if vals["title"] != '':
+            if vals["title"] != None:
+                # print("vals------", vals["title"])
+                doc_object['title'] = vals["title"]
+
+        if vals["publication_date"] != '':
+            if vals["publication_date"] != None:
+                # print("vals------", vals["publication_date"])
+                doc_object['article_date'] = vals["publication_date"]
+
+        # if vals["authors"] != '':
+        #     # print("inside authors first---------")
+        #     if vals["authors"]["authors"] != '':
+        #         # print("inside authors second---------")
+        #         if vals["authors"]["authors"]["full_name"] != '':
+        #             print("inside fullname---------")
+        #             if vals["authors"]["authors"]["full_name"] != None:
+        #                 print("vals------", vals["authors"]["authors"]["full_name"])
+        #                 # doc_object['authors'] = vals["authors"]
+
+        response_author_name = vals["authors"]
+        resp = response_author_name["authors"]
+
+        for vals1 in resp:
+            if vals1["full_name"] != '':
+                # print("inside fullname---------")
+                if vals1["full_name"] != None:
+                    print("vals------", vals1["full_name"])
+                    doc_object['author'] = vals1["full_name"]
+
+        
+        for vals1 in resp:
+            if vals1["affiliation"] != '':
+                if vals1["affiliation"] != None:
+                    for country in pycountry.countries:
+                        if country.name in vals1["affiliation"]:
+                            print("vals------", type(country.name), country.name)
+                            doc_object['affiliation_name'] = country.name
+                            print(doc_object['affiliation_name'])
+
+        if vals["publication_title"] != '':
+            if vals["publication_title"] != None:
+                # print("vals------", vals["publication_title"])
+                doc_object['publication_name'] = vals["publication_title"]
+        
+        # if vals["isbn"] != '':
+        #     if vals["isbn"] != None:
+        #         print("vals------", vals["isbn"])
+        #         doc_object['issn'] = vals["isbn"]
+        
+        # if vals["issn"] != '':
+        #     if vals["issn"] != None:
+        #         print("vals------", vals["issn"])
+        #         doc_object['issn'] = vals["issn"]
+
+        for vals1 in resp:
+            if vals1["affiliation"] != '':
+                if vals1["affiliation"] != None:
+                    # print("vals------", vals1["affiliation"])
+                    doc_object['affiliation_name'] = vals1["affiliation"]
+        
+        records_ieee.append(doc_object)
+
+    return JsonResponse(records_ieee, safe=False)
 
 
 @csrf_exempt

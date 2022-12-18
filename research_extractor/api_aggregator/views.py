@@ -460,7 +460,7 @@ def update_search_results(request):
     if request.method == 'PUT':
         request_json = json_parser.parse(request)
         # checking if search alredy present
-        query_set = SearchResults.objects.get(search_id=2)
+        query_set = SearchResults.objects.get(search_name=request_json['search_name'])
         search_result = Search_ResultsSerializer(query_set, data=request_json)
         if search_result.is_valid():
             search_result.save()

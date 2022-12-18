@@ -6,14 +6,24 @@ $(document).ready(function () {
     var table = $('#table_id').DataTable({
         responsive: true,
         dom: 'Bfrtip',
-        buttons: ['copy', 'excel', 'pdfHtml5', 'print', 'colvis'],
+        buttons: [
+            {
+                text: '<i class="fa-solid fa-cloud-arrow-up"></i> Curate',
+                className: 'buttons-curate',
+                action: function (e, dt, button, config) {
+                    var data = getTableData();
+                    updateSearchResults(data);
+                }
+            },
+            'copy', 'excel', 'pdfHtml5', 'print', 'colvis'
+            
+        ],
         columns: [
             {
                 data: "liked",
                 title: 'Like',
                 wrap: true,
                 render: function (data, type, row) {
-                    console.log(data, type);
                     if (type == 'display') {
                         if (data == true)
                             return '<button class="button button-like liked" value="' + data + '" data-><i class="fa fa-heart"></i><span>Liked</span></button>';
@@ -51,7 +61,6 @@ $(document).ready(function () {
                 data: "url",
                 title: "Link",
                 render: function (data, type, row) {
-                    console.log(data, type);
                     if (type == 'display') {
                         return '<a target="_blank" href="' + data + '"><i class="fa fa-external-link" aria-hidden="true"></i> Link</a>';
                     }
@@ -69,23 +78,22 @@ $(document).ready(function () {
         query = $('#query-builder').queryBuilder('getSQL')['sql'];
         query = query.replaceAll('keyword = ', '');
         db = $('#research-db').val();
-        $('#query-text').html("Datasource: " + db + ", Query:" + query);
-        const url = "search/" + db + "?search_text=" + query;
-        $('#lmask').show();
+        $('#query-response').html("Datasource: " + db + ", Query: " + query);
         $.ajax({
-            url: url,
+            url: "search/" + db,
             type: 'get',
+            beforeSend: () => showLoadingScreen(true),
             data: {
                 search_text: query,
                 force_search: document.getElementById("force-search").checked
             },
             success: function(data) {
                 table.rows.add(data).draw();
-                $('#lmask').hide();
+                showLoadingScreen(false);
             },
             error: function(error) {
                 alert("Request failed: " + error);
-                $('#lmask').hide();
+                showLoadingScreen(false);
             }
         });
     });
@@ -148,10 +156,59 @@ $(document).ready(function () {
     }
 
     function setupDataFramePlugins() {
+        $('.buttons-curate').removeClass('dt-button').addClass('btn');
         $('.buttons-copy').removeClass('dt-button').addClass('btn btn-primary').html('<i class="fa-regular fa-copy"></i> Copy');
         $('.buttons-excel').removeClass('dt-button').addClass('btn btn-success').html('<i class="fas fa-file-excel"></i> Export');
         $('.buttons-pdf').removeClass('dt-button').addClass('btn btn btn-danger').html('<i class="fa-solid fa-file-pdf"></i> PDF');
         $('.buttons-print').removeClass('dt-button').addClass('btn btn btn-warning').html('<i class="fa-solid fa-print"></i> Print');
+    }
+
+    function getTableData() {
+        const rows = $('#table_id').DataTable().rows().data();
+        var data = [];
+        for (var i = 0; i < rows.length; i++) {
+            data.push(rows[i]);
+        }
+        return data;
+    }
+
+    function updateSearchResults(data) {
+        var queryDetails = getQueryDetails();
+        request = {
+            search_name: queryDetails['search_name'],
+            research_db: queryDetails['research_db'],
+            results: data
+        };
+        $.ajax({
+            url: "search/update_result/",
+            type: 'PUT',
+            data: JSON.stringify(request),
+            beforeSend: () => showLoadingScreen(true),
+            success: function (data) {
+                alert('Curation updated!')
+                showLoadingScreen(false);
+            },
+            error: function (error) {
+                console.error(error);
+                alert('Failed to update curated results!');
+            }
+        });
+    }
+
+    function getQueryDetails() {
+        let queryDetails = {};
+        let queryContent = $('#query-response').html().split(', ');
+        queryDetails['research_db'] = queryContent[0].split(': ')[1];
+        queryDetails['search_name'] = queryContent[1].split(': ')[1];
+        return queryDetails;
+    }
+
+    function showLoadingScreen(value) {
+        if (value) {
+            $('#lmask').show();
+        } else {
+            $('#lmask').hide();
+        }
     }
 });
 

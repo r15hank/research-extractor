@@ -227,3 +227,14 @@ input {
     margin-right: 10px;
     margin-top: 5px;
 }
+
+.buttons-curate {
+    background-color: #5bbac3;
+    color: white;
+}
+
+.buttons-curate:hover {
+    color: white;
+    background-color: #479aa1;
+    background-position: 0 -15px;
+}

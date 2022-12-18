@@ -41,7 +41,6 @@ class Results(models.Model):
         managed = False
 
 
-
 class SearchResults(models.Model):
     search_id = models.AutoField(primary_key=True)
     search_name = models.CharField(max_length=10000)

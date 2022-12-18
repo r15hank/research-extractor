@@ -28,6 +28,19 @@ import pycountry
 
 
 from django.conf import settings
+# !pipenv install elsapy
+from elsapy.elsclient import ElsClient
+from elsapy.elssearch import ElsSearch
+from elsapy.elsprofile import ElsAuthor
+from elsapy.elsdoc import AbsDoc
+import pandas as pd
+import json
+import itertools
+import csv
+import json
+
+data = []
+
 
 json_parser = JSONParser()
 
@@ -47,12 +60,15 @@ def search(request, research_db):
     
     if research_db == 'scopus':
         results = search_scopus(search_text)
+        # results = search_all(search_text)
     elif research_db == 'pubmed':
         results = search_pubmed(search_text)
     elif research_db == 'wos':
         results = search_wos(search_text)
+    elif research_db == 'all':
+        results = search_all(search_text)
     else:
-        return JsonResponse({'error': "No such database: research_db"}, safe=False)
+        return JsonResponse({'error': "NJsonResponseo such database: research_db"}, safe=False)
     
     search_results = save_search_results(search_text, research_db, results)
     return JsonResponse(search_results.data, safe=False)
@@ -110,97 +126,190 @@ def _joinurlTo(item, key, sep=";"):
 def _replace_none(lst, repl=""):
     return [repl if v is None else v for v in lst]
 
+def search_all(searchText):
+    results_scopus = search_scopus(searchText)
+    results_pubmed = search_pubmed(searchText)
+    results_wos = search_wos(searchText)
 
-def search_scopus(search_text):
-    api_url = f"https://api.elsevier.com/content/search/scopus?query=all({search_text})&apiKey={settings.SCOPUS_API_KEY}"
-    response1 = requests.get(api_url)
-    responsearray = response1.json()["search-results"]["entry"]
+    file = json.dumps(results_scopus, indent=4)
+    with open("scopus response 22.json", "w") as outfile:
+        outfile.write(file)   
 
-    docresult = []
-    doc = create_doc()
-    for item in responsearray:
-        info = {}
-        # Parse affiliations
-        info["affilname"] = _join(item, 'affilname')
-        info["afid"] = _join(item, 'afid')
-        info["aff_city"] = _join(item, 'affiliation-city')
-        info["aff_country"] = _join(item, 'affiliation-country')
-        info["url"] = _joinurlTo(item,'link')
-        # Parse authors
-        try:
-            # Deduplicate list of authors
-            authors = deduplicate(item['author'])
-            # Extract information
-            surnames = _replace_none([d['surname'] for d in authors])
-            firstnames = _replace_none([d['given-name'] for d in authors])
-            info["auth_names"] = ";".join([", ".join([t[0], t[1]]) for t in
-                                            zip(surnames, firstnames)])
-            info["auth_ids"] = ";".join([d['authid'] for d in authors])
-            affs = []
-            for auth in authors:
-                aff = listify(deduplicate(auth.get('afid', [])))
-                affs.append('-'.join([d['$'] for d in aff]))
-            if [a for a in affs if a]:
-                info["auth_afid"] = ';'.join(affs)
-            else:
-                info["auth_afid"] = None
-        except KeyError:
-            pass
-        date = item.get('prism:coverDate')
-        if isinstance(date, list):
-            date = date[0].get('$')
-        default = [None, {"$": None}]
-        freetoread = get_freetoread(item, ["freetoread", "value"], default)
-        freetoreadLabel = get_freetoread(item, ["freetoreadLabel", "value"], default)
-        new = doc(article_number=item.get('article-number'),
-                    title=item.get('dc:title'), fund_no=item.get('fund-no'),
-                    fund_sponsor=item.get('fund-sponsor'),
-                    subtype=item.get('subtype'), doi=item.get('prism:doi'),
-                    subtypeDescription=item.get('subtypeDescription'),
-                    issn=item.get('prism:issn'), creator=item.get('dc:creator'),
-                    affilname=info.get("affilname"),
-                    author_names=info.get("auth_names"),
-                    coverDate=date, volume=item.get('prism:volume'),
-                    coverDisplayDate=item.get('prism:coverDisplayDate'),
-                    publicationName=item.get('prism:publicationName'),
-                    source_id=item.get('source-id'), author_ids=info.get("auth_ids"),
-                    aggregationType=item.get('prism:aggregationType'),
-                    issueIdentifier=item.get('prism:issueIdentifier'),
-                    pageRange=item.get('prism:pageRange'),
-                    author_afids=info.get("auth_afid"),
-                    affiliation_country=info.get("aff_country"),
-                    citedby_count=int(item['citedby-count']),
-                    openaccess=int(item['openaccess']),
-                    freetoread=freetoread, freetoreadLabel=freetoreadLabel,
-                    eIssn=item.get('prism:eIssn'),
-                    author_count=item.get('author-count', {}).get('$'),
-                    affiliation_city=info.get("aff_city"), afid=info.get("afid"),
-                    description=item.get('dc:description'), pii=item.get('pii'),
-                    authkeywords=item.get('authkeywords'), eid=item.get('eid'),
-                    fund_acr=item.get('fund-acr'), pubmed_id=item.get('pubmed-id'),
-                    url=info["url"])
-        docresult.append(new)
         
-    results = []
-    for item in docresult:
-        results.append({
-                "title": item.title,
-                "author":"dummyr",
-                "affiliation_country": item.affiliation_country,
-                "affiliation_name": item.affilname,
-                # "affiliation_country": item.affiliation_country,
-                "publication_name": item.publicationName,
-                "issn": item.issn,
-                "affiliation_name": item.affilname,
-                "url": item.url,
-                "abstract": '',
-                "liked": False
-            })
+    file = json.dumps(results_pubmed, indent=4)
+    with open("pubmed response 23.json", "w") as outfile:
+        outfile.write(file)   
 
-    return results
+        
+    file = json.dumps(results_wos, indent=4)
+    with open("wos response 22.json", "w") as outfile:
+        outfile.write(file)   
+
+    all_uniques=results_scopus
+    seen =[]
+    for item in results_pubmed:
+        if item["title"] not in seen:
+            all_uniques.append(item)
+    for item in results_wos:
+        if item["title"] not in seen:
+            all_uniques.append(item)
+
+    return all_uniques
 
 
-pubmed = PubMed(tool="MyTool", email=settings.PUBMED_API_KEY)
+
+
+def search_scopus(searchText):
+    apikey = "b97a9fb42a8f113a136f96493b0453d9"
+    # apikey = "b395bcd63c8fb8ee197217a1cb373cef"
+    client = ElsClient(apikey)
+    doc_srch = ElsSearch("KEY({}) AND PUBYEAR > 2021".format(searchText), 'scopus')
+    doc_srch.execute(client, get_all=False)
+    data=[]
+    # print("doc_srch   ",doc_srch)
+    for result in doc_srch.results:
+        data.append(result)
+    docresult = []
+    response=[]
+    doc = create_doc()
+    # print("dr   ",data)
+    if len(data) > 0:
+        for item in data:
+            info = {}
+            # Parse affiliations
+            info["affilname"] = _join(item, 'affilname')
+            info["afid"] = _join(item, 'afid')
+            info["aff_city"] = _join(item, 'affiliation-city')
+            info["aff_country"] = _join(item, 'affiliation-country')
+            info["url"] = _joinurlTo(item,'link')
+            
+            try:
+                authors = deduplicate(item['author'])
+                surnames = _replace_none([d['surname'] for d in authors])
+                firstnames = _replace_none([d['given-name'] for d in authors])
+                info["auth_names"] = ";".join([", ".join([t[0], t[1]]) for t in
+                                                zip(surnames, firstnames)])
+                info["auth_ids"] = ";".join([d['authid'] for d in authors])
+                affs = []
+                for auth in authors:
+                    aff = listify(deduplicate(auth.get('afid', [])))
+                    affs.append('-'.join([d['$'] for d in aff]))
+                if [a for a in affs if a]:
+                    info["auth_afid"] = ';'.join(affs)
+                else:
+                    info["auth_afid"] = None
+            except KeyError:
+                pass
+            date = item.get('prism:coverDate')
+            if isinstance(date, list):
+                date = date[0].get('$')
+            default = [None, {"$": None}]
+            freetoread = get_freetoread(item, ["freetoread", "value"], default)
+            freetoreadLabel = get_freetoread(item, ["freetoreadLabel", "value"], default)
+            new = doc(article_number=item.get('article-number'),
+                        title=item.get('dc:title'), fund_no=item.get('fund-no'),
+                        fund_sponsor=item.get('fund-sponsor'),
+                        subtype=item.get('subtype'), doi=item.get('prism:doi'),
+                        subtypeDescription=item.get('subtypeDescription'),
+                        issn=item.get('prism:issn'), creator=item.get('dc:creator'),
+                        affilname=info.get("affilname"),
+                        author_names=info.get("auth_names"),
+                        coverDate=date, volume=item.get('prism:volume'),
+                        coverDisplayDate=item.get('prism:coverDisplayDate'),
+                        publicationName=item.get('prism:publicationName'),
+                        source_id=item.get('source-id'), author_ids=info.get("auth_ids"),
+                        aggregationType=item.get('prism:aggregationType'),
+                        issueIdentifier=item.get('prism:issueIdentifier'),
+                        pageRange=item.get('prism:pageRange'),
+                        author_afids=info.get("auth_afid"),
+                        affiliation_country=info.get("aff_country"),
+                        citedby_count=int(item['citedby-count']),
+                        openaccess=int(item['openaccess']),
+                        freetoread=freetoread, freetoreadLabel=freetoreadLabel,
+                        eIssn=item.get('prism:eIssn'),
+                        author_count=item.get('author-count', {}).get('$'),
+                        affiliation_city=info.get("aff_city"), afid=info.get("afid"),
+                        description=item.get('dc:description'), pii=item.get('pii'),
+                        authkeywords=item.get('authkeywords'), eid=item.get('eid'),
+                        fund_acr=item.get('fund-acr'), pubmed_id=item.get('pubmed-id'),
+                        url=info["url"])
+            docresult.append(new)
+            docobj={
+                    "title": new.title,
+                    "author":"dummyr",
+                    "affiliation_country": new.affiliation_country,
+                    "affiliation_name": new.affilname,
+                    # "affiliation_country": item.affiliation_country,
+                    "publication_name": new.publicationName,
+                    "issn": new.issn,
+                    "affiliation_name": new.affilname,
+                    "url": new.url,
+                    "abstract": '',
+                    "liked": False
+            }
+            response.append(docobj)
+
+    file = json.dumps(response, indent=4)
+    with open("api_respone_resultselsapy232.json", "w") as outfile:
+        outfile.write(file)    
+    return response
+
+
+# def search_scopus_ex(request):
+    search_text = request.GET.get('search_text')
+    print(f"Searching text: {search_text}")
+    db_Name='Scopus'
+    forceParam=True
+    resultArray=[]
+
+    if db_Name=='Scopus':
+        responseScopus=getScopusfromElsapyUpdated(search_text)
+        resultArray=responseScopus    
+    searchobj={
+            "search_name": search_text,
+            "research_db": "Scopus",
+            "results": resultArray
+        }
+    
+    saveSearch= SearchResults()        
+    if forceParam:
+        searchid = SearchResults.objects.filter(search_name=search_text)
+        # searchlist = Search_ResultsSerializer(searchid, many=True)
+        
+        searchlist = Search_ResultsSerializer(searchid, many=False)
+        # print("searchlist",searchlist)
+        if searchlist.data !=None and len(searchlist.data)>0:
+            for val in searchlist.data:
+                if val["results"] != None and len(val["results"])>0:
+                    prevId=val["search_id"]
+                    searcharr=[]
+                    searcharr.extend(val["results"])
+                    searchtitles = [x["title"] for x in searcharr]
+                    for item in resultArray:
+                        if item["title"] not in searchtitles:
+                            searcharr.append(item)
+                    searchobj["results"]=searcharr
+                    oldSR = SearchResults.objects.get(search_id=prevId)
+                    oldSR.results = searcharr
+                    oldSR.save()
+        else:
+            saveSearch= SearchResults()  
+            saveSearch.search_name=searchobj['search_name']
+            saveSearch.research_db=searchobj["research_db"]
+            saveSearch.results=searchobj['results']
+            saveSearch.save()
+    else:
+        saveSearch= SearchResults()  
+        saveSearch.search_name=searchobj['search_name']
+        saveSearch.research_db=searchobj["research_db"]
+        saveSearch.results=searchobj['results']
+        saveSearch.save()
+
+    return JsonResponse(searchobj["results"], safe=False)
+
+
+# pubmed = PubMed(tool="MyTool", email=settings.PUBMED_API_KEY)
+pubmed = PubMed(tool="MyTool", email="amhatre1@binghamton.edu")
 
 def search_query(query):
     Entrez.email = pubmed.email
@@ -235,17 +344,51 @@ def search_pubmed(search_text):
         for affillist in paper['MedlineCitation']['Article']['AuthorList']:
             for affil in affillist["AffiliationInfo"]:
                 allaffils=affil["Affiliation"]+";"+allaffils
-            name=str(affillist["LastName"])+" "+ str(affillist["ForeName"])+"; "+name
+
+            if hasattr(affillist, "ForeName"):
+                name=str(affillist["ForeName"])+"; "+name
+                if hasattr(affillist, "ForeName"):
+                    name=str(affillist["LastName"])+" "+name
+            else:
+                name = ''+name
+            # name=str(affillist["LastName"])+" "+ str(affillist["ForeName"])+"; "+name
+        
+        title=""
+        affill_country=""
+        pub_name=""
+        issn=""
+        abstract=""
+        if hasattr(paper,'MedlineCitation'):
+            if hasattr(paper['MedlineCitation'],'Article'):
+                if hasattr (paper['MedlineCitation']['Article'],'ArticleTitle'):
+                    title= paper['MedlineCitation']['Article']['ArticleTitle']
+                if hasattr(paper['MedlineCitation']['Article'],'Journal'):
+                    if hasattr(paper['MedlineCitation']['Article']['Journal'],'Title'):
+                        pub_name=paper['MedlineCitation']['Article']['Journal']['Title']
+                    if hasattr(paper['MedlineCitation']['Article']['Journal'],'ISSN'):
+                        issn=paper['MedlineCitation']['Article']['Journal']['ISSN']
+            if hasattr(paper['MedlineCitation'],'MedlineJournalInfo'):
+                if hasattr(paper['MedlineCitation']['MedlineJournalInfo'],'Country'):
+                    affill_country=paper['MedlineCitation']['MedlineJournalInfo']['Country']
+            
+            
+                    
+ 
+                
         record = {
-            'title' : paper['MedlineCitation']['Article']['ArticleTitle'],
+            # 'title' : paper['MedlineCitation']['Article']['ArticleTitle'],
+            'title' : title,
             'article_date' : date,
             'author': name,
             'affiliation_country' : paper['MedlineCitation']['MedlineJournalInfo']['Country'],
-            'publication_name' : paper['MedlineCitation']['Article']['Journal']['Title'],
-            'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
+            'affiliation_country' : affill_country,
+            # 'publication_name' : paper['MedlineCitation']['Article']['Journal']['Title'],
+            'publication_name' : pub_name,
+            # 'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
+            'issn' : issn,
             'affiliation_name' : allaffils,
             'url': f"https://pubmed.ncbi.nlm.nih.gov/{paper['MedlineCitation']['PMID']}/",
-            "abstract": '',
+            "abstract": abstract,
             'liked': False
         }
         records.append(record)        

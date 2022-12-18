@@ -28,4 +28,3 @@ class Search_ResultsSerializer(serializers.ModelSerializer):
     class Meta:
         model =  SearchResults
         fields = ('search_id','search_name','research_db','results')
-

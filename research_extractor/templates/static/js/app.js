@@ -191,6 +191,7 @@ $(document).ready(function () {
             error: function (error) {
                 console.error(error);
                 alert('Failed to update curated results!');
+                showLoadingScreen(false);
             }
         });
     }

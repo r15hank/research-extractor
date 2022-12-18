@@ -18,6 +18,7 @@ python-decouple = "*"
 xplore = "*"
 pycountry = "*"
 iso3166 = "*"
+elsapy = "*"
 
 [dev-packages]
 

@@ -78,7 +78,7 @@ WSGI_APPLICATION = "research_extractor.wsgi.application"
 DATABASES = {
        'default': {
            'ENGINE': 'djongo',
-           'NAME': 'res-db6',
+           'NAME': 'research-dbone',
        }
    }
 

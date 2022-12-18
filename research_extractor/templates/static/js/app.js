@@ -3,7 +3,33 @@ $(document).ready(function () {
     setupQueryBuilder();
     setupAdditionalFormControls();
 
-    var table = $('#table_id').DataTable({
+    var historyTable = $('#history-table').DataTable({
+        responsive: true,
+        columns: [
+            {
+                data: "research_db",
+                title: "Datasource"
+            },
+            {
+                data: "search_name",
+                title: "Query"
+            },
+        ],
+        select: {
+            style: 'single'
+        }
+    });
+    $('#history-table tbody').on('click', 'tr', function () {
+        $(this).toggleClass('selected');
+    });
+
+    $('#example').DataTable({
+        select: {
+            style: 'single'
+        }
+    });
+
+    var resultsTable = $('#results-table').DataTable({
         responsive: true,
         dom: 'Bfrtip',
         buttons: [
@@ -73,8 +99,6 @@ $(document).ready(function () {
     setupDataFramePlugins();
 
     $('#search').on('click', function () {
-        table.clear().draw();
-        // console.log(JSON.stringify($('#query-builder').queryBuilder('getSQL'), undefined, 4));
         query = $('#query-builder').queryBuilder('getSQL')['sql'];
         query = query.replaceAll('keyword = ', '');
         db = $('#research-db').val();
@@ -87,13 +111,16 @@ $(document).ready(function () {
         $.ajax({
             url: "search/research_db/" + db,
             type: 'get',
-            beforeSend: () => showLoadingScreen(true),
+            beforeSend: () => {
+                resultsTable.clear().draw();
+                showLoadingScreen(true);
+            },
             data: {
                 search_text: query,
                 force_search: force_search
             },
             success: function (data) {
-                table.rows.add(data.results).draw();
+                resultsTable.rows.add(data.results).draw();
                 showLoadingScreen(false);
             },
             error: function (error) {
@@ -159,28 +186,30 @@ $(document).ready(function () {
         $.ajax({
             url: "search/queries/",
             type: 'get',
+            beforeSend: () => {
+                historyTable.clear().draw();
+                showLoadingScreen(true);
+            },
             success: function (results) {
-                options = [];
-                for (result of results) {
-                    text = createQueryText(result['research_db'], result['search_name']);
-                    options.push({ 'text': text });
-                }
-                addOptionTags($('#query-history'), options, 'text', 'text');
+                historyTable.rows.add(results).draw();
+                showLoadingScreen(false);
             },
             error: function (error) {
                 alert("Request failed: " + error.error);
+                console.error(error);
+                showLoadingScreen(false);
             }
         });
     });
 
     $('#search-history').on('click', function () {
-        query_details = getQueryDetails($('#query-history').val());
+        query_details = historyTable.rows('.selected').data()[0]
         search_db(query_details['research_db'], query_details['search_name'], false);
     });
 
-    $('#table_id tbody').on('click', 'button', function () {
+    $('#results-table tbody').on('click', 'button', function () {
         isLiked = toggleLikeButton($(this));
-        table.cell(this.closest('td')).data(isLiked);
+        resultsTable.cell(this.closest('td')).data(isLiked);
     });
 
     function toggleLikeButton(button) {
@@ -198,7 +227,7 @@ $(document).ready(function () {
     }
 
     function getTableData() {
-        const rows = $('#table_id').DataTable().rows().data();
+        const rows = $('#results-table').DataTable().rows().data();
         var data = [];
         for (var i = 0; i < rows.length; i++) {
             data.push(rows[i]);

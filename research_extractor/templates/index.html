@@ -23,11 +23,13 @@
 
     <!-- Datatables -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.13.1/b-2.3.3/b-colvis-2.3.3/b-html5-2.3.3/b-print-2.3.3/sr-1.2.0/datatables.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.5.0/css/select.dataTables.min.css" />
     
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
     <script type="text/javascript"
         src="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.13.1/b-2.3.3/b-colvis-2.3.3/b-html5-2.3.3/b-print-2.3.3/sr-1.2.0/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/select/1.5.0/js/dataTables.select.min.js"></script>
 
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"/>
@@ -48,7 +50,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="jumbotron banner">
-                <h2 class="display-4">
+                <h2 class="header-title">
                     <span class="glyphicon glyphicon-globe"></span>
                     Research Search Extractor
                     <a href="#" data-toggle="tooltip" data-placement="top" title="Simple tool for querying research databases and curating results for the research community!">
@@ -59,7 +61,7 @@
             </div>
             <div id="searcharea" class="col-xs-12">
                 <span class="pull-right">
-                    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal"> <i class="fa-solid fa-clock-rotate-left"></i> History</button>
+                    <button id="history-btn" type="button" class="btn btn-info" data-toggle="modal" data-target="#myModal"> <i class="fa-solid fa-clock-rotate-left"></i> History</button>
                     <label id="force-search-label" class="toggle">
                         <input id="force-search" type="checkbox">
                         <span class="slider"></span>
@@ -79,7 +81,7 @@
                         <h2>Results</h2>
                         <pre id="query-response">Query:</pre>
                     </div>
-                    <table id="table_id" class="display" style="border: 1px black;"></table>
+                    <table id="results-table" class="display" style="border: 1px black;"></table>
                 </div>
             </div>
         </div>
@@ -99,6 +101,7 @@
                     Queries
                     <select name="select" id="query-history">
                     </select>
+                    <table id="history-table" class="display" style="border: 1px black;"></table>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

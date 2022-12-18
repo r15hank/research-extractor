@@ -238,3 +238,11 @@ input {
     background-color: #479aa1;
     background-position: 0 -15px;
 }
+
+#history-btn {
+    margin-bottom: 25px;
+}
+
+.header-title {
+    padding-bottom: 25px;
+}

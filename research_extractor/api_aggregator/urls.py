@@ -17,9 +17,7 @@ from django.urls import path
 from research_extractor.api_aggregator import views
 
 urlpatterns = [
-    path("scopus/", views.search_scopus),
-    path("pubmed/", views.search_pubmed),
-    path("wos/", views.search_wos),
+    path("research_db/<str:research_db>", views.search),
     path("update_result/", views.update_search_results),
     path("ieee/",views.search_ieee),
 ]

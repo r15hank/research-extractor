@@ -80,7 +80,7 @@ $(document).ready(function () {
         db = $('#research-db').val();
         $('#query-response').html("Datasource: " + db + ", Query: " + query);
         $.ajax({
-            url: "search/" + db,
+            url: "search/research_db/" + db,
             type: 'get',
             beforeSend: () => showLoadingScreen(true),
             data: {
@@ -88,7 +88,7 @@ $(document).ready(function () {
                 force_search: document.getElementById("force-search").checked
             },
             success: function(data) {
-                table.rows.add(data).draw();
+                table.rows.add(data.results).draw();
                 showLoadingScreen(false);
             },
             error: function(error) {

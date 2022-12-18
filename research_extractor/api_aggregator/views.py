@@ -31,6 +31,52 @@ from django.conf import settings
 
 json_parser = JSONParser()
 
+def search(request, research_db):
+    search_text = request.GET.get('search_text')
+    force_search = request.GET.get('force_search').lower() == "true"
+    print(f"Searching text: {search_text}, research_db: {research_db}, force_search: {force_search}")
+
+    if not force_search:
+        #checking if search alredy present
+        try:
+            queryset = SearchResults.objects.get(search_name=search_text, research_db=research_db)
+            search_results = Search_ResultsSerializer(queryset, many=False)
+            return JsonResponse(search_results.data, safe=False)
+        except:
+            print("Results not cached, fetching from db...")
+    
+    if research_db == 'scopus':
+        results = search_scopus(search_text)
+    elif research_db == 'pubmed':
+        results = search_pubmed(search_text)
+    elif research_db == 'wos':
+        results = search_wos(search_text)
+    else:
+        return JsonResponse({'error': "No such database: research_db"}, safe=False)
+    
+    search_results = save_search_results(search_text, research_db, results)
+    return JsonResponse(search_results.data, safe=False)
+    
+
+def save_search_results(search_name, research_db, results):
+    search_results = {
+        "search_name": search_name,
+        "research_db": research_db,
+        "results": results
+    }
+    try:
+        query_set =  SearchResults.objects.get(search_name=search_name, research_db=research_db)
+        print(f"Updating search results for search_name: {search_name} & research_db: {research_db}")
+        search_result = Search_ResultsSerializer(query_set, data=search_results)
+    except:
+        print(f"Inserting search results for search_name: {search_name} & research_db: {research_db}")
+        search_result = Search_ResultsSerializer(data=search_results)
+
+    if search_result.is_valid():
+        search_result.save()
+        return search_result
+
+
 def create_doc():
     fields = 'eid doi pii pubmed_id title subtype subtypeDescription ' \
                 'creator afid affilname affiliation_city ' \
@@ -65,34 +111,9 @@ def _replace_none(lst, repl=""):
     return [repl if v is None else v for v in lst]
 
 
-def search_scopus(request):
-    search_text = request.GET.get('search_text')
-    print(f"Searching text: {search_text}")
-    
-    #checking if search alredy present
-    searchid = SearchResults.objects.filter(search_name=search_text)
-    searchlist = Search_ResultsSerializer(searchid, many=True)
-
-    prevSearch=""
-    prevId=""
-    prevresults=[]
-    # print("searchlist.data     :",searchlist.data)
-    if len(searchlist.data)>0:
-        for val in searchlist.data:
-            # print("seearchname----",val["search_name"])
-            prevSearch=val["search_name"]
-            prevId=val["search_id"]
-            if(len(prevresults)==0):
-                prevresults=val["results"]
-            else:
-                prevresults.extend(val["results"])
-
-    # print("major length------",prevresults)
-
-    #Uncomment start
+def search_scopus(search_text):
     api_url = f"https://api.elsevier.com/content/search/scopus?query=all({search_text})&apiKey={settings.SCOPUS_API_KEY}"
     response1 = requests.get(api_url)
-
     responsearray = response1.json()["search-results"]["entry"]
 
     docresult = []
@@ -160,9 +181,9 @@ def search_scopus(request):
                     url=info["url"])
         docresult.append(new)
         
-    response = []
+    results = []
     for item in docresult:
-        docobj={
+        results.append({
                 "title": item.title,
                 "author":"dummyr",
                 "affiliation_country": item.affiliation_country,
@@ -174,57 +195,9 @@ def search_scopus(request):
                 "url": item.url,
                 "abstract": '',
                 "liked": False
-            }
+            })
 
-        response.append(
-            docobj
-        )
-
-    response.extend(prevresults)
-
-    seen = []
-    print("prev length",len(response))
-    new_list=[]
-    for data in response:
-        if data["title"] not in seen:
-            seen.append(data["title"])
-            new_list.append(data)
-            
-    print("new length",len(new_list))
-
-    # print(len(response))
-    searchobj={}
-    if prevSearch == "":
-        searchobj={
-            # "search_id": models.AutoField(primary_key=True)
-            "search_name": search_text,
-            # search_date = models.DateField(d)
-            "research_db": "Scopus",
-            "results": new_list
-        }
-        saveSearch= SearchResults()
-        saveSearch.search_name=searchobj['search_name']
-        saveSearch.research_db=searchobj["research_db"]
-        saveSearch.results=searchobj['results']
-        saveSearch.save()
-
-    else:
-        searchobj={
-            # "search_id": models.AutoField(primary_key=True)
-            "search_name": prevSearch,
-            # search_date = models.DateField(d)
-            "research_db": "Scopus",
-            "results": new_list
-        }
-        # searchid = SearchResults.objects.filter(search_name=search_text)
-        # searchlist = Search_ResultsSerializer(searchid, many=True)
-        
-        oldSR = SearchResults.objects.get(search_id=prevId)
-        oldSR.results = searchobj['results']
-        oldSR.save() 
-
-    print("returning-----:", searchobj["results"])
-    return JsonResponse( searchobj["results"], safe=False)
+    return results
 
 
 pubmed = PubMed(tool="MyTool", email=settings.PUBMED_API_KEY)
@@ -248,8 +221,7 @@ def fetch_details(id_list):
     results = Entrez.read(handle)
     return results
   
-def search_pubmed(request):
-    search_text = request.GET.get('search_text')
+def search_pubmed(search_text):
     results = search_query(search_text) #search word = Image Driven 2D Material
     id_list = results['IdList']  # type: ignore
     papers = fetch_details(id_list)
@@ -273,10 +245,11 @@ def search_pubmed(request):
             'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
             'affiliation_name' : allaffils,
             'url': f"https://pubmed.ncbi.nlm.nih.gov/{paper['MedlineCitation']['PMID']}/",
+            "abstract": '',
             'liked': False
         }
         records.append(record)        
-    return JsonResponse(records, safe=False)
+    return records
 
 
 # Configure API key authorization: key
@@ -285,8 +258,7 @@ configuration = woslite_client.Configuration()
 search_api_instance = woslite_client.SearchApi(woslite_client.ApiClient(configuration))
 configuration.api_key['X-ApiKey'] = settings.WOS_API_KEY
 
-def search_wos(request):
-    search_text = request.GET.get('search_text')
+def search_wos(search_text):
     
     database_id = 'WOS'  # str | Database to search. Must be a valid database ID, one of the following: BCI/BIOABS/BIOSIS/CCC/DCI/DIIDW/MEDLINE/WOK/WOS/ZOOREC. WOK represents all databases.
     usr_query = f'TS='+search_text  # str | User query for requesting data, The query parser will return errors for invalid queries.
@@ -315,6 +287,7 @@ def search_wos(request):
             'publication_name' : '',
             'issn' : 'Not found',
             'affiliation_name' : 'Not found',
+            "abstract": '',
             'liked': False
         }
 
@@ -322,7 +295,7 @@ def search_wos(request):
                 if vals.other.contributor_researcher_id_names != '':
                     if vals.other.contributor_researcher_id_names != None:
                         # print("vals--------",vals.other.contributor_researcher_id_names)
-                        doc_object['affiliation_name'] = vals.other.contributor_researcher_id_names
+                        doc_object['affiliation_name'] = str(vals.other.contributor_researcher_id_names)
             if vals.other != '':
                 if vals.other.identifier_issn != '':
                     if vals.other.identifier_issn != None:
@@ -342,11 +315,11 @@ def search_wos(request):
                 if vals.author.authors != '':
                     if vals.author.authors != None:
                         # print("vals------",vals.author.authors)
-                        doc_object['author'] = vals.author.authors
+                        doc_object['author'] = str(vals.author.authors)
             if vals.title != '':
                 if vals.title.title != '':
                     if vals.title.title != None:
-                        doc_object['title'] = vals.title.title
+                        doc_object['title'] = str(vals.title.title)
                         # print("Titlevals----\n",vals.title.title)
             if vals.ut != '':
                 doc_object['url'] = f"https://www.webofscience.com/wos/woscc/full-record/{vals.ut}"
@@ -357,7 +330,7 @@ def search_wos(request):
     except ApiException as e:
         print("Exception when calling SearchApi->root_get: %s\\n" % e)
 
-    return JsonResponse(records_wos, safe=False)
+    return records_wos
 
 
 def search_ieee(request):
@@ -460,7 +433,7 @@ def update_search_results(request):
     if request.method == 'PUT':
         request_json = json_parser.parse(request)
         # checking if search alredy present
-        query_set = SearchResults.objects.get(search_name=request_json['search_name'])
+        query_set = SearchResults.objects.get(search_name=request_json['search_name'], research_db=request_json['research_db'])
         search_result = Search_ResultsSerializer(query_set, data=request_json)
         if search_result.is_valid():
             search_result.save()

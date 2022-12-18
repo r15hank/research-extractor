@@ -1,8 +1,8 @@
-
 .banner {
     padding-bottom: 0px;
     margin-bottom: 0px;
 }
+
 #searcharea {
     padding-left: 50px;
     padding-right: 50px;
@@ -26,6 +26,7 @@ input {
     min-width: 100%;
     max-width: 100%;
 }
+
 .rule-value-container {
     width: calc(100% - 42%);
     /*Can use either % value or px */
@@ -46,4 +47,183 @@ input {
 .fa-heart {
     color: red;
     cursor: pointer;
+}
+
+.toggle {
+    --width: 80px;
+    --height: calc(var(--width) / 3);
+    margin-left: 10px;
+    position: relative;
+    display: inline-block;
+    width: var(--width);
+    height: var(--height);
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+    border-radius: var(--height);
+    cursor: pointer;
+}
+
+.toggle input {
+    display: none;
+}
+
+.toggle .slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--height);
+    background-color: #ccc;
+    transition: all 0.4s ease-in-out;
+}
+
+.toggle .slider::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--height));
+    height: calc(var(--height));
+    border-radius: calc(var(--height) / 2);
+    background-color: #fff;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s ease-in-out;
+}
+
+.toggle input:checked+.slider {
+    background-color: #2196F3;
+}
+
+.toggle input:checked+.slider::before {
+    transform: translateX(calc(var(--width) - var(--height)));
+}
+
+.toggle .labels {
+    position: absolute;
+    top: 8px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    font-size: 12px;
+    font-family: sans-serif;
+    transition: all 0.4s ease-in-out;
+}
+
+.toggle .labels::after {
+    content: attr(data-off);
+    position: absolute;
+    right: 5px;
+    color: #4d4d4d;
+    opacity: 1;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    transition: all 0.4s ease-in-out;
+}
+
+.toggle .labels::before {
+    content: attr(data-on);
+    position: absolute;
+    left: 5px;
+    color: #ffffff;
+    opacity: 0;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.4);
+    transition: all 0.4s ease-in-out;
+}
+
+.toggle input:checked~.labels::after {
+    opacity: 0;
+}
+
+.toggle input:checked~.labels::before {
+    opacity: 1;
+}
+
+.help-tip {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    text-align: center;
+    background-color: #29b6f6;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    line-height: 26px;
+    cursor: default;
+    transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.help-tip:hover {
+    cursor: pointer;
+    background-color: #ccc;
+}
+
+.help-tip:before {
+    content: '?';
+    font-weight: 700;
+    color: #fff;
+}
+
+.help-tip p {
+    visibility: hidden;
+    opacity: 0;
+    text-align: left;
+    background-color: #039be5;
+    padding: 20px;
+    width: 300px;
+    position: absolute;
+    border-radius: 4px;
+    right: -4px;
+    color: #fff;
+    font-size: 13px;
+    line-height: normal;
+    transform: scale(0.7);
+    transform-origin: 100% 0%;
+    transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.help-tip:hover p {
+    cursor: default;
+    visibility: visible;
+    opacity: 1;
+    transform: scale(1.0);
+}
+
+.help-tip p:before {
+    position: absolute;
+    content: '';
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-bottom-color: #039be5;
+    right: 10px;
+    top: -12px;
+}
+
+.help-tip p:after {
+    width: 100%;
+    height: 40px;
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 0;
+}
+
+.help-tip a {
+    color: #fff;
+    font-weight: 700;
+}
+
+.help-tip a:hover,
+.help-tip a:focus {
+    color: #fff;
+    text-decoration: underline;
+}
+
+#force-search-tooltip {
+    padding-top: 5px;
+}
+
+#force-search-label {
+    margin-right: 10px;
+    margin-top: 5px;
 }

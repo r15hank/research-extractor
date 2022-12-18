@@ -61,6 +61,8 @@ $(document).ready(function () {
         ]
     });
 
+    setupDataFramePlugins();
+
     $('#search').on('click', function () {
         table.clear().draw();
         // console.log(JSON.stringify($('#query-builder').queryBuilder('getSQL'), undefined, 4));
@@ -70,13 +72,26 @@ $(document).ready(function () {
         $('#query-text').html("Datasource: " + db + ", Query:" + query);
         const url = "search/" + db + "?search_text=" + query;
         $('#lmask').show();
-        $.get(url, function (data, status) {
-            table.rows.add(data).draw();
-            $('#lmask').hide();
+        $.ajax({
+            url: url,
+            type: 'get',
+            data: {
+                search_text: query,
+                force_search: document.getElementById("force-search").checked
+            },
+            success: function(data) {
+                table.rows.add(data).draw();
+                $('#lmask').hide();
+            },
+            error: function(error) {
+                alert("Request failed: " + error);
+                $('#lmask').hide();
+            }
         });
     });
 
     $('#lmask').hide();
+
 
     function setupQueryBuilder() {
         var options = {
@@ -95,6 +110,9 @@ $(document).ready(function () {
     function setupAdditionalFormControls() {
         var search_button_tag = '<button id="search" class="btn btn-md btn-primary pull-right"><span class="glyphicon glyphicon-search"></span> Search</button>'
         var research_db_dropdown_tag = '<label class="form-select" for="research-db">Research DB </label><select id="research-db" class="form-select"></select>'
+
+        $('[data-toggle="tooltip"]').tooltip();   
+
         $('#query-builder_group_0').append('<div class="search-container">' + research_db_dropdown_tag + search_button_tag + '</div>');
         var $select = $('#research-db')
 
@@ -127,6 +145,13 @@ $(document).ready(function () {
         isLiked = !(button.val() === 'true')
         $(button).val(isLiked);
         return isLiked;
+    }
+
+    function setupDataFramePlugins() {
+        $('.buttons-copy').removeClass('dt-button').addClass('btn btn-primary').html('<i class="fa-regular fa-copy"></i> Copy');
+        $('.buttons-excel').removeClass('dt-button').addClass('btn btn-success').html('<i class="fas fa-file-excel"></i> Export');
+        $('.buttons-pdf').removeClass('dt-button').addClass('btn btn btn-danger').html('<i class="fa-solid fa-file-pdf"></i> PDF');
+        $('.buttons-print').removeClass('dt-button').addClass('btn btn btn-warning').html('<i class="fa-solid fa-print"></i> Print');
     }
 });
 

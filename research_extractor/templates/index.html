@@ -22,8 +22,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
 
     <!-- Datatables -->
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.13.1/b-2.3.3/b-colvis-2.3.3/b-html5-2.3.3/b-print-2.3.3/sr-1.2.0/datatables.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jszip-2.5.0/dt-1.13.1/b-2.3.3/b-colvis-2.3.3/b-html5-2.3.3/b-print-2.3.3/sr-1.2.0/datatables.min.css" />
     
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
@@ -49,13 +48,28 @@
     <div class="container-fluid">
         <div class="row">
             <div class="jumbotron banner">
-                <h3 class="display-4"><span class="glyphicon glyphicon-globe"></span> Research Search Extractor</h3>
-                <hr><i class="fa-solid fa-house"></i>
-            
-                <p class="lead">Simple tool for querying research databases and curating results for the research community.</p>
+                <h1 class="display-4">
+                    <span class="glyphicon glyphicon-globe"></span>
+                    Research Search Extractor
+                    <a href="#" data-toggle="tooltip" data-placement="top" title="Simple tool for querying research databases and curating results for the research community!">
+                        <i class="fa fa-circle-info" aria-hidden="true"></i>
+                    </a>
+                </h1>
+                
             </div>
             <div id="searcharea" class="col-xs-12">
+                <span class="pull-right">
+                    <label id="force-search-label" class="toggle">
+                        <input id="force-search" type="checkbox">
+                        <span class="slider"></span>
+                        <span class="labels" data-on="Force" data-off="Cache"></span>
+                    </label>
+                    <a href="#" data-toggle="tooltip" data-placement="bottom"
+                        title="If cache mode then results will be fetched from cached db, else if force mode then fresh results will be queried from the selected research database"><i
+                            id="force-search-tooltip" class="fa fa-question-circle pull-right" aria-hidden="true"></i></a>
+                </span>
                 <h2>Query builder</h2>
+                
                 <div id="query-builder" class="col-xs-"></div>
             </div>
             <div id="displayarea" class="col-xs-12">

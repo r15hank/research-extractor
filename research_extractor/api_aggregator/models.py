@@ -29,6 +29,7 @@ from djongo import models
 
 class Results(models.Model):
     title = models.CharField(primary_key=True, max_length=1000)
+    datasource = models.CharField(max_length=100)
     author = models.CharField(max_length=1000)
     # article_date= models.CharField(max_length=1000)
     publication_name = models.CharField(max_length=1000, blank=True, null=True)

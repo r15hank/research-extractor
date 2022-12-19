@@ -60,6 +60,10 @@ $(document).ready(function () {
                 }
             },
             {
+                data: "datasource",
+                title: "Data source"
+            },
+            {
                 data: "title",
                 title: "Title"
             },
@@ -171,6 +175,10 @@ $(document).ready(function () {
             {
                 'db_name': 'ieee',
                 'db_desc': 'IEEE'
+            },
+            {
+                'db_name': 'all',
+                'db_desc': 'All databases'
             }
         ];
         addOptionTags($('#research-db'), research_databases, 'db_name', 'db_desc')

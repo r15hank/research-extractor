@@ -248,7 +248,8 @@ def search_scopus(searchText):
                     "affiliation_name": new.affilname,
                     "url": new.url,
                     "abstract": '',
-                    "liked": False
+                    "liked": False,
+                    'datasource': 'scopus'
             }
             response.append(docobj)
 
@@ -354,7 +355,8 @@ def search_pubmed(search_text):
             'affiliation_name' : affiliation_name,
             'url': url,
             "abstract": 'Not Found',
-            'liked': False
+            'liked': False,
+            'datasource': 'pubmed'
         }
 
         records.append(record)        
@@ -397,7 +399,8 @@ def search_wos(search_text):
             'issn' : 'Not found',
             'affiliation_name' : 'Not found',
             "abstract": '',
-            'liked': False
+            'liked': False,
+            'datasource': 'wos'
         }
 
             try:
@@ -466,11 +469,9 @@ def search_wos(search_text):
 def search_ieee(search_text):
 
     format='json'
-    api_key = '99c97axrqm3gp6ysncpbtnja'
     max_records = 100
     print(f"Searching text: {search_text}")
-    fetch_text = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&format={format}&apikey={api_key}&max_records={max_records}'
-    # fetch_text = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&format={format}&apikey={settings.IEEE_API_KEY}'
+    fetch_text = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&format={format}&apikey={settings.IEEE_API_KEY}&max_records={max_records}'
     response1 = requests.get(fetch_text)
     response = response1.json()
     response_articles= response["articles"]
@@ -490,7 +491,8 @@ def search_ieee(search_text):
             'affiliation_name' : 'Not found',
             'abstract': '',
             'url': vals['pdf_url'],
-            'liked': False
+            'liked': False,
+            'datasource': 'ieee'
         }
 
         if vals["title"] != '':

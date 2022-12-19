@@ -380,7 +380,7 @@ def search_wos(search_text):
     records_wos=[]
 
     # print(type(records))
-
+    errors=[]
     try:
     # Find record(s) by user query
         api_response = search_api_instance.root_get(database_id, usr_query, count, first_record)
@@ -400,38 +400,59 @@ def search_wos(search_text):
             'liked': False
         }
 
-            if vals.other != '':
-                if vals.other.contributor_researcher_id_names != '':
-                    if vals.other.contributor_researcher_id_names != None:
-                        # print("vals--------",vals.other.contributor_researcher_id_names)
-                        doc_object['affiliation_name'] = str(vals.other.contributor_researcher_id_names)
-            if vals.other != '':
-                if vals.other.identifier_issn != '':
-                    if vals.other.identifier_issn != None:
-                        # print("vals----------",vals.other.identifier_issn)
-                        doc_object['issn'] = vals.other.identifier_issn[0]
-            if vals.source != '':
-                if vals.source.source_title != '':
-                    if vals.source.source_title != None:
-                        # print("publication name\nvals-------",vals.source.source_title)
-                        doc_object['publication_name'] = vals.source.source_title[0]
-            if vals.source != '':
-                if vals.source.published_biblio_date and vals.source.published_biblio_year != '':
-                    if vals.source.published_biblio_date and vals.source.published_biblio_year != None:
-                        # print("vals------",vals.source.published_biblio_date,"\t",vals.source.published_biblio_year)
-                        doc_object['article_date'] = vals.source.published_biblio_date[0]+" "+vals.source.published_biblio_year[0]
-            if vals.author != '':
-                if vals.author.authors != '':
-                    if vals.author.authors != None:
-                        # print("vals------",vals.author.authors)
-                        doc_object['author'] = str(vals.author.authors)
-            if vals.title != '':
-                if vals.title.title != '':
-                    if vals.title.title != None:
-                        doc_object['title'] = str(vals.title.title)
-                        # print("Titlevals----\n",vals.title.title)
-            if vals.ut != '':
-                doc_object['url'] = f"https://www.webofscience.com/wos/woscc/full-record/{vals.ut}"
+            try:
+                if vals.other != '':
+                    if vals.other.contributor_researcher_id_names != '':
+                        if vals.other.contributor_researcher_id_names != None:
+                            # print("vals--------",vals.other.contributor_researcher_id_names)
+                            doc_object['affiliation_name'] = str(vals.other.contributor_researcher_id_names)
+            except:
+                errors.append("affliliation name not found")
+            try:
+                if vals.other != '':
+                    if vals.other.identifier_issn != '':
+                        if vals.other.identifier_issn != None:
+                            # print("vals----------",vals.other.identifier_issn)
+                            doc_object['issn'] = vals.other.identifier_issn[0]
+            except:
+                errors.append("issn not found")
+            try:
+                if vals.source != '':
+                    if vals.source.source_title != '':
+                        if vals.source.source_title != None:
+                            # print("publication name\nvals-------",vals.source.source_title)
+                            doc_object['publication_name'] = vals.source.source_title[0]
+            except:
+                errors.append("publication name not found")
+            try:
+                if vals.source != '':
+                    if vals.source.published_biblio_date and vals.source.published_biblio_year != '':
+                        if vals.source.published_biblio_date and vals.source.published_biblio_year != None:
+                            # print("vals------",vals.source.published_biblio_date,"\t",vals.source.published_biblio_year)
+                            doc_object['article_date'] = vals.source.published_biblio_date[0]+" "+vals.source.published_biblio_year[0]
+            except:
+                errors.append("article date not found")
+            try:
+                if vals.author != '':
+                    if vals.author.authors != '':
+                        if vals.author.authors != None:
+                            # print("vals------",vals.author.authors)
+                            doc_object['author'] = str(vals.author.authors)
+            except:
+                errors.append("author name not found")
+            try:
+                if vals.title != '':
+                    if vals.title.title != '':
+                        if vals.title.title != None:
+                            doc_object['title'] = str(vals.title.title)
+                            # print("Titlevals----\n",vals.title.title)
+            except:
+                errors.append("title not found")
+            try:
+                if vals.ut != '':
+                    doc_object['url'] = f"https://www.webofscience.com/wos/woscc/full-record/{vals.ut}"
+            except:
+                errors.append("url not found")
             # pprint(doc_object)
             records_wos.append(doc_object)
         # pprint(type(records_wos))

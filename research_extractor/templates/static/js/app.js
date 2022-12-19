@@ -167,6 +167,10 @@ $(document).ready(function () {
             {
                 'db_name': 'wos',
                 'db_desc': 'Web of Science'
+            },
+            {
+                'db_name': 'ieee',
+                'db_desc': 'IEEE'
             }
         ];
         addOptionTags($('#research-db'), research_databases, 'db_name', 'db_desc')

@@ -67,8 +67,10 @@ def search(request, research_db):
         results = search_wos(search_text)
     elif research_db == 'all':
         results = search_all(search_text)
+    elif research_db == 'ieee':
+        results = search_ieee(search_text)
     else:
-        return JsonResponse({'error': "NJsonResponseo such database: research_db"}, safe=False)
+        return JsonResponse({'error': f"No such database: {research_db}"}, safe=False)
     
     search_results = save_search_results(search_text, research_db, results)
     return JsonResponse(search_results.data, safe=False)
@@ -476,12 +478,11 @@ def search_wos(search_text):
     return records_wos
 
 
-def search_ieee(request):
+def search_ieee(search_text):
 
     format='json'
     api_key = '99c97axrqm3gp6ysncpbtnja'
-    max_records = 5
-    search_text = request.GET.get('search_text')
+    max_records = 100
     print(f"Searching text: {search_text}")
     fetch_text = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&format={format}&apikey={api_key}&max_records={max_records}'
     # fetch_text = f'http://ieeexploreapi.ieee.org/api/v1/search/articles?querytext={search_text}&format={format}&apikey={settings.IEEE_API_KEY}'
@@ -502,6 +503,8 @@ def search_ieee(request):
             'publication_name' : '',
             'issn' : 'Not found',
             'affiliation_name' : 'Not found',
+            'abstract': '',
+            'url': vals['pdf_url'],
             'liked': False
         }
 
@@ -510,7 +513,7 @@ def search_ieee(request):
                 # print("vals------", vals["title"])
                 doc_object['title'] = vals["title"]
 
-        if vals["publication_date"] != '':
+        if vals.get('publication_date', '') != '':
             if vals["publication_date"] != None:
                 # print("vals------", vals["publication_date"])
                 doc_object['article_date'] = vals["publication_date"]
@@ -537,7 +540,7 @@ def search_ieee(request):
 
         
         for vals1 in resp:
-            if vals1["affiliation"] != '':
+            if vals1.get("affiliation", "") != '':
                 if vals1["affiliation"] != None:
                     for country in pycountry.countries:
                         if country.name in vals1["affiliation"]:
@@ -545,7 +548,7 @@ def search_ieee(request):
                             doc_object['affiliation_name'] = country.name
                             print(doc_object['affiliation_name'])
 
-        if vals["publication_title"] != '':
+        if vals.get("publication_title", "") != '':
             if vals["publication_title"] != None:
                 # print("vals------", vals["publication_title"])
                 doc_object['publication_name'] = vals["publication_title"]
@@ -561,14 +564,14 @@ def search_ieee(request):
         #         doc_object['issn'] = vals["issn"]
 
         for vals1 in resp:
-            if vals1["affiliation"] != '':
+            if vals1.get("affiliation", "") != '':
                 if vals1["affiliation"] != None:
                     # print("vals------", vals1["affiliation"])
                     doc_object['affiliation_name'] = vals1["affiliation"]
         
         records_ieee.append(doc_object)
 
-    return JsonResponse(records_ieee, safe=False)
+    return records_ieee
 
 
 @csrf_exempt

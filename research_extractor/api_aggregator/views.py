@@ -48,7 +48,7 @@ def search(request, research_db):
     search_text = request.GET.get('search_text')
     force_search = request.GET.get('force_search').lower() == "true"
     print(f"Searching text: {search_text}, research_db: {research_db}, force_search: {force_search}")
-
+    results=[]
     if not force_search:
         #checking if search alredy present
         try:
@@ -92,7 +92,8 @@ def save_search_results(search_name, research_db, results):
 
     if search_result.is_valid():
         search_result.save()
-        return search_result
+        print("SR------",search_result)
+    return search_result
 
 
 def create_doc():
@@ -257,58 +258,6 @@ def search_scopus(searchText):
     return response
 
 
-# def search_scopus_ex(request):
-    search_text = request.GET.get('search_text')
-    print(f"Searching text: {search_text}")
-    db_Name='Scopus'
-    forceParam=True
-    resultArray=[]
-
-    if db_Name=='Scopus':
-        responseScopus=getScopusfromElsapyUpdated(search_text)
-        resultArray=responseScopus    
-    searchobj={
-            "search_name": search_text,
-            "research_db": "Scopus",
-            "results": resultArray
-        }
-    
-    saveSearch= SearchResults()        
-    if forceParam:
-        searchid = SearchResults.objects.filter(search_name=search_text)
-        # searchlist = Search_ResultsSerializer(searchid, many=True)
-        
-        searchlist = Search_ResultsSerializer(searchid, many=False)
-        # print("searchlist",searchlist)
-        if searchlist.data !=None and len(searchlist.data)>0:
-            for val in searchlist.data:
-                if val["results"] != None and len(val["results"])>0:
-                    prevId=val["search_id"]
-                    searcharr=[]
-                    searcharr.extend(val["results"])
-                    searchtitles = [x["title"] for x in searcharr]
-                    for item in resultArray:
-                        if item["title"] not in searchtitles:
-                            searcharr.append(item)
-                    searchobj["results"]=searcharr
-                    oldSR = SearchResults.objects.get(search_id=prevId)
-                    oldSR.results = searcharr
-                    oldSR.save()
-        else:
-            saveSearch= SearchResults()  
-            saveSearch.search_name=searchobj['search_name']
-            saveSearch.research_db=searchobj["research_db"]
-            saveSearch.results=searchobj['results']
-            saveSearch.save()
-    else:
-        saveSearch= SearchResults()  
-        saveSearch.search_name=searchobj['search_name']
-        saveSearch.research_db=searchobj["research_db"]
-        saveSearch.results=searchobj['results']
-        saveSearch.save()
-
-    return JsonResponse(searchobj["results"], safe=False)
-
 
 # pubmed = PubMed(tool="MyTool", email=settings.PUBMED_API_KEY)
 pubmed = PubMed(tool="MyTool", email="amhatre1@binghamton.edu")
@@ -333,66 +282,81 @@ def fetch_details(id_list):
     return results
   
 def search_pubmed(search_text):
-    results = search_query(search_text) #search word = Image Driven 2D Material
+
+    results = search_query(search_text) 
     id_list = results['IdList']  # type: ignore
     papers = fetch_details(id_list)
     records=[]
-    for i, paper in enumerate(papers['PubmedArticle']):  # type: ignore
-        allaffils=''
-        name=''
-        date=''
-        for articledate in paper['MedlineCitation']['Article']['ArticleDate']:
-            date=articledate["Year"]+"-"+articledate["Month"]+"-"+articledate["Day"]
-        for affillist in paper['MedlineCitation']['Article']['AuthorList']:
-            for affil in affillist["AffiliationInfo"]:
-                allaffils=affil["Affiliation"]+";"+allaffils
 
-            if hasattr(affillist, "ForeName"):
-                name=str(affillist["ForeName"])+"; "+name
-                if hasattr(affillist, "ForeName"):
-                    name=str(affillist["LastName"])+" "+name
-            else:
-                name = ''+name
-            # name=str(affillist["LastName"])+" "+ str(affillist["ForeName"])+"; "+name
+    for i, paper in enumerate(papers['PubmedArticle']):  # type: ignore
+        title= 'Not Found'
+        article_date= 'Not Found'
+        author= 'Not Found'
+        affiliation_country='Not Found'
+        publication_name='Not Found'
+        issn='Not found'
+        affiliation_name='Not Found'
+        url='Not Found'
+
+        errors=[] 
+        try:
+            title= paper['MedlineCitation']['Article']['ArticleTitle']
+        except:
+            errors.append("title not found")
         
-        title=""
-        affill_country=""
-        pub_name=""
-        issn=""
-        abstract=""
-        if hasattr(paper,'MedlineCitation'):
-            if hasattr(paper['MedlineCitation'],'Article'):
-                if hasattr (paper['MedlineCitation']['Article'],'ArticleTitle'):
-                    title= paper['MedlineCitation']['Article']['ArticleTitle']
-                if hasattr(paper['MedlineCitation']['Article'],'Journal'):
-                    if hasattr(paper['MedlineCitation']['Article']['Journal'],'Title'):
-                        pub_name=paper['MedlineCitation']['Article']['Journal']['Title']
-                    if hasattr(paper['MedlineCitation']['Article']['Journal'],'ISSN'):
-                        issn=paper['MedlineCitation']['Article']['Journal']['ISSN']
-            if hasattr(paper['MedlineCitation'],'MedlineJournalInfo'):
-                if hasattr(paper['MedlineCitation']['MedlineJournalInfo'],'Country'):
-                    affill_country=paper['MedlineCitation']['MedlineJournalInfo']['Country']
+        try:
+            for articledate in paper['MedlineCitation']['Article']['ArticleDate']:
+                article_date=articledate["Year"]+"-"+articledate["Month"]+"-"+articledate["Day"]
+        except:
+            errors.append("date not found")
+
+        try:      
+            for affillist in paper['MedlineCitation']['Article']['AuthorList']:
+                author=str(affillist["LastName"])+" "+ str(affillist["ForeName"])+"; "+author
+        except:
+            errors.append("Author not found")
+
+        try:
+            affiliation_country =paper['MedlineCitation']['MedlineJournalInfo']['Country']
+        except:
+            errors.append("affil country not found")
+
+        try:
+            publication_name = paper['MedlineCitation']['Article']['Journal']['Title']
+        except:
+            errors.append("pub name not found")
+        
+        try:
+             issn = paper['MedlineCitation']['Article']['Journal']['ISSN'],
+        except:
+            errors.append("issn not found")
+
+        try:
+            for affillist in paper['MedlineCitation']['Article']['AuthorList']:
+                for affil in affillist["AffiliationInfo"]:
+                    affiliation_name=affil["Affiliation"]+";"+affiliation_name
+        except:
+            errors.append("Affiliation name not found")
+
+        try:
+             url= f"https://pubmed.ncbi.nlm.nih.gov/{paper['MedlineCitation']['PMID']}/",
+        except:
+            errors.append("url not found")
             
-            
-                    
- 
-                
+
         record = {
-            # 'title' : paper['MedlineCitation']['Article']['ArticleTitle'],
             'title' : title,
-            'article_date' : date,
-            'author': name,
-            'affiliation_country' : paper['MedlineCitation']['MedlineJournalInfo']['Country'],
-            'affiliation_country' : affill_country,
-            # 'publication_name' : paper['MedlineCitation']['Article']['Journal']['Title'],
-            'publication_name' : pub_name,
-            # 'issn' : paper['MedlineCitation']['Article']['Journal']['ISSN'],
+            'article_date' : article_date,
+            'author': author,
+            'affiliation_country' : affiliation_country ,
+            'publication_name' : publication_name,
             'issn' : issn,
-            'affiliation_name' : allaffils,
-            'url': f"https://pubmed.ncbi.nlm.nih.gov/{paper['MedlineCitation']['PMID']}/",
-            "abstract": abstract,
+            'affiliation_name' : affiliation_name,
+            'url': url,
+            "abstract": 'Not Found',
             'liked': False
         }
+
         records.append(record)        
     return records
 

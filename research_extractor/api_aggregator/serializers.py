@@ -20,7 +20,7 @@ from .models import SearchResults, Results #SearchArchive,FavoritesArchive,Paper
 class ResultsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Results
-        fields = ('title','author','publication_name','article_date','issn','affiliation_name','affiliation_name','affiliation_country','url','abstract','liked')
+        fields = ('title','author','publication_name','issn','affiliation_name','affiliation_name','affiliation_country','url','abstract','liked') #'article_date',
 
 
 class Search_ResultsSerializer(serializers.ModelSerializer):

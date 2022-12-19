@@ -328,7 +328,7 @@ def search_pubmed(search_text):
             errors.append("pub name not found")
         
         try:
-             issn = paper['MedlineCitation']['Article']['Journal']['ISSN'],
+            issn = str(paper['MedlineCitation']['Article']['Journal']['ISSN'])
         except:
             errors.append("issn not found")
 
@@ -340,7 +340,7 @@ def search_pubmed(search_text):
             errors.append("Affiliation name not found")
 
         try:
-             url= f"https://pubmed.ncbi.nlm.nih.gov/{paper['MedlineCitation']['PMID']}/",
+            url= f"https://pubmed.ncbi.nlm.nih.gov/{paper['MedlineCitation']['PMID']}/"
         except:
             errors.append("url not found")
             
